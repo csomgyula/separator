@@ -33,6 +33,8 @@ Block separators separate internal content (the content within the start separat
 
 A recursive block is a special block where blocks can be nested within each other.
 
+`recursive` is a special keyword. Such keywords are prefixed with the `@` symbol. TODO: a better syntax?
+
 **no separator**
 
     $body
@@ -46,9 +48,7 @@ In this case the content will be treated as whole, ie. with no separators.
 
 An escape escapes from normal parsing rules. That is to say separator rules are 'suspended' within an escape sequence. 
 
-`escape` is a special keyword. Such keywords are prefixed with the `@` symbol. TODO: a better syntax?
-
-One can define escape within an escape itself:
+One can define escape within an escape itself with th `^` character:
 
     @escape " ^\" "
 
@@ -66,7 +66,7 @@ The `end` keyword terminates the previous separator rules. This is useful in two
 
     $header \n @end \r\r $body
 
-This will extract lines from the string until it found two carriage returns, then it treats the rest as a whole.
+This will extract lines from the string until it finds two carriage returns, then it treats the rest as a whole.
 
 samples
 --
@@ -129,6 +129,8 @@ pseudo specs:
 The language can be expressed in itself:-)
 
     $def $ $def @ $item \s*
+
+This sample also shows that one can use the same *tag name* repeatedly.
 
 TODO
 --
