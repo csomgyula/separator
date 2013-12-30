@@ -4,52 +4,78 @@ separator DSL
 status: working draft  
 date: 2013-12-30
 
+goal
+--
+
+A simple language to parse based on separators. Simple that is simple such as regular expressions and simpler than BNF.
+
 elements
 --
 
-no separator
+**simple separator**
 
-    $body
+    $line \n 
 
-simple separator:
+Simple separators are used to separate a list of elements. You should define a *tag name* for the elements and the separator itself. *Tag names* are prefixed with the `$` symbol. TODO: a better syntax?
 
-    $record \n 
-    $field ;
+In the above case the tagname is `line` and the separator is the new line character `\n`. If you apply the above rule then it will extract each line from the original text, each of them will be tagged with the given tag name. Tags are useful when there are many separators, see samples below.
 
-simple block:
+**simple block**
 
     $quote " "
 
-recursive block
+Block separators separate internal content (the content within the start separator char and the end separator char) from external content. In this case the quotian mark separates the quoted string from the rest of the content.
+
+**recursive block**
 
     $paren@recursive ( )
     $block@rec { }
 
-escape:
+A recursive block is a special block where blocks can be nested within each other.
+
+**no separator**
+
+    $body
+
+In this case the content will be treated as whole, ie. with no separators.
+
+**escape**
 
     @escape // \n
     @esc /* */
 
-escape in escape:
+An escape escapes from normal parsing rules. That is to say separator rules are 'suspended' within an escape sequence. 
+
+`escape` is a special keyword. Such keywords are prefixed with the `@` symbol. TODO: a better syntax?
+
+One can define escape within an escape itself:
 
     @escape " ^\" "
 
-trim:
+**trim**
 
     @trim \s \n
 
-end of parsing:
+You can trim the content with the `trim` keyword.
+
+**end of parsing**
 
     @end \r\r
+
+The `end` keyword terminates the previous separator rules. This is useful in two cases: if you do not want to parse the whole string or if you want to apply different separator rules for the different part of the string. For instance you can define the following rule to parse HTTP:
+
+    $header \n @end \r\r $body
+
+This will extract lines from the string until it found two carriage returns, then it treats the rest as a whole.
 
 samples
 --
 
-CSV:
+**CSV**
 
     $record \n $field ;
 
-This shows how to nest separators. The resulting tree will have the following structure:
+This shows how to nest simple separators. The resulting tree will have the following structure:
 
     - record1
      - field11
@@ -60,7 +86,7 @@ This shows how to nest separators. The resulting tree will have the following st
      - field22
      ...
 
-HTTP:
+**HTTP**
 
     $action @end \n $header \n $item : @end \r\r body
 
@@ -76,27 +102,35 @@ This shows how to concatenate parsing rules, using the `@end` construct. The res
     ...
     - body
 
-Java:
+**Java**
 
     $block@rec { } $expression ; @esc " ^\" " @esc // \n @esc /* */ @trim \s \n
 
-This sample shows how to nest blocks and simple separators and it illustrates how to use escapes. TODO: this is not a true nesting.
+This sample shows how to nest recursive blocks and simple separators. It illustrates how to use escapes as well. TODO: this is not a true nesting.
 
-JSON: TODO
+**JSON**  
+TODO
 
 
-formal syntax in BNF
+syntax 
 --
 
+pseudo specs:
+
+**in BNF**
+
     separator := \s* (head (\s* marker)* \s*)+ 
-    head := tag | tag@keyword | @keyword
+    head := $tag | $tag@keyword | @keyword
     marker := [^\s]+
     tag := alpha*
     keyword := esc | rec | trim
 
-formal syntax in separator
---
-
-pseudo:
+**in separator**  
+The language can be expressed in itself:-)
 
     $def $ $def @ $item \s*
+
+TODO
+--
+
+* nesting simple separators within blocks
