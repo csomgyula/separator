@@ -16,9 +16,9 @@ elements
 
     $line \n 
 
-Simple separators are used to separate a list of elements. You should define a *tag name* for the elements and the separator itself. *Tag names* are prefixed with the `$` symbol. TODO: a better syntax?
+Simple separators are used to separate a list of elements. You should define a *tag tag* for the elements and the separator itself. *Tag names* are prefixed with the `$` symbol. TODO: a better syntax?
 
-In the above case the tagname is `line` and the separator is the new line character `\n`. If you apply the above rule then it will extract each line from the original text, each of them will be tagged with the given tag name. Tags are useful when there are many separators, see samples below.
+In the above case the tagname is `line` and the separator is the new line character `\n`. If you apply the above rule then it will extract each line from the original text, each of them will be tagged with the given tag tag. Tags are useful when there are many separators, see samples below.
 
 **simple block**
 
@@ -130,7 +130,7 @@ The language can be expressed in itself:-)
 
     $def $ $def @ $item \s*
 
-This sample also shows that one can use the same *tag name* repeatedly.
+This sample also shows that one can use the same *tag tag* repeatedly.
 
 TODO
 --
