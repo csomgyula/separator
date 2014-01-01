@@ -12,7 +12,7 @@ public class Tag {
      */
     public static Tag root(){
         Tag tag = new Tag();
-        tag.setType(Type.ROOT);
+        tag.setKind(Kind.ROOT);
         return tag;
     }
 
@@ -21,28 +21,28 @@ public class Tag {
      */
     public static Tag eos(){
         Tag tag = new Tag();
-        tag.setType(Type.EOS);
+        tag.setKind(Kind.EOS);
         return tag;
     }
 
     private String name;
 
-    private List<TokenType> tokens;
+    private List<Token> tokens;
 
-    private List<TokenTypePair> tokenPairs;
+    private List<Token.Pair> tokenPairs;
 
-    private List<TokenType> escapes;
+    private List<Token> escapes;
 
-    private Type type;
+    private Kind kind;
 
     private int index;
 
-    public void setType(Type type) {
-        this.type = type;
+    public void setKind(Kind kind) {
+        this.kind = kind;
     }
 
-    public Type getType() {
-        return type;
+    public Kind getKind() {
+        return kind;
     }
 
     public void setName(String name) {
@@ -51,28 +51,28 @@ public class Tag {
 
     public String getName() {
         if(name==null){
-            name = ("@"+getType().toString()).intern();
+            name = ("@"+ getKind().toString()).intern();
         }
         return name;
     }
 
-    public List<TokenType> getTokens() {
+    public List<Token> getTokens() {
         if (tokens==null){
-            tokens = new ArrayList<TokenType>();
+            tokens = new ArrayList<Token>();
         }
         return tokens;
     }
 
-    public List<TokenTypePair> getTokenPairs() {
+    public List<Token.Pair> getTokenPairs() {
         if (tokenPairs ==null){
-            tokenPairs = new ArrayList<TokenTypePair>();
+            tokenPairs = new ArrayList<Token.Pair>();
         }
         return tokenPairs;
     }
 
-    public List<TokenType> getEscapes() {
+    public List<Token> getEscapes() {
         if (escapes==null){
-            escapes = new ArrayList<TokenType>();
+            escapes = new ArrayList<Token>();
         }
         return escapes;
     }
@@ -85,13 +85,16 @@ public class Tag {
         this.index = index;
     }
 
-    public enum Type{
+    /**
+     * Tag type.
+     */
+    public enum Kind {
         ROOT,
         EMPTY,
         SIMPLE,
         BLOCK,
         RECURSIVE_BLOCK,
-        SKIP,
+        // SKIP,
         ESCAPE,
         END,
         EOS;

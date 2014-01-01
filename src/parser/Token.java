@@ -1,33 +1,114 @@
 package separator.parser;
 
 /**
- * Represents a separator token found in text.
+ * Represents a separator token.
  */
 public class Token {
-    private TokenType type;
-    private int startPosition, endPosition;
 
-    public TokenType getType() {
-        return type;
+    private Tag tag;
+    private String pattern;
+    private Kind kind;
+
+    public Tag getTag() {
+        return tag;
     }
 
-    public void setType(TokenType type) {
-        this.type = type;
+    public void setTag(Tag tag) {
+        this.tag = tag;
     }
 
-    public int getStartPosition() {
-        return startPosition;
+    public String getPattern() {
+        return pattern;
     }
 
-    public void setStartPosition(int startPosition) {
-        this.startPosition = startPosition;
+    public void setPattern(String pattern) {
+        this.pattern = pattern;
     }
 
-    public int getEndPosition() {
-        return endPosition;
+    public Kind getKind() {
+        return kind;
     }
 
-    public void setEndPosition(int endPosition) {
-        this.endPosition = endPosition;
+    public void setKind(Kind kind) {
+        this.kind = kind;
+    }
+
+    /**
+     * Token types
+     */
+    public enum Kind {
+        SIMPLE,
+        BLOCK_OPEN, BLOCK_CLOSE,
+        RECURSIVE_BLOCK_OPEN, RECURSIVE_BLOCK_CLOSE,
+        // SKIP_OPEN, SKIP_ESCAPE, SKIP_CLOSE,
+        ESCAPE_OPEN, ESCAPE_ESCAPE, ESCAPE_CLOSE,
+        END,
+        EOS;
+    }
+
+
+    /**
+     * Represents a pair of tokens associated with a block.
+     */
+    public static class Pair {
+        private Tag tag;
+        private Token open, close;
+
+        public Tag getTag() {
+            return tag;
+        }
+
+        public void setTag(Tag tag) {
+            this.tag = tag;
+        }
+
+        public Token getOpen() {
+            return open;
+        }
+
+        public void setOpen(Token open) {
+            this.open = open;
+        }
+
+        public Token getClose() {
+            return close;
+        }
+
+        public void setClose(Token close) {
+            this.close = close;
+        }
+    }
+
+    /**
+     * Represents a separator token found in the input string.
+     * An instance has start position (inclusive) and end position (exclusive).
+     */
+    public static class Instance {
+        private Token type;
+        private int startPosition, endPosition;
+
+        public Token getType() {
+            return type;
+        }
+
+        public void setType(Token type) {
+            this.type = type;
+        }
+
+        public int getStartPosition() {
+            return startPosition;
+        }
+
+        public void setStartPosition(int startPosition) {
+            this.startPosition = startPosition;
+        }
+
+        public int getEndPosition() {
+            return endPosition;
+        }
+
+        public void setEndPosition(int endPosition) {
+            this.endPosition = endPosition;
+        }
     }
 }

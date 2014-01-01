@@ -1,11 +1,13 @@
 package separator.parser;
 
+import separator.Node;
+
 import java.util.List;
 
 /**
- * Prototype implementation of the tokenizer. Under construction.
+ * Prototype implementation of the node builder. Under construction.
  */
-public class Tokenizer {
+public class NodeBuilder {
     private List<Tag> tags;
 
     private String text;
@@ -13,7 +15,7 @@ public class Tokenizer {
     private int textPosition;
 
     /**
-     * The text to tokenize.
+     * The text to build nodes from.
      */
     public void setText(String text) {
         this.text = text;
@@ -24,11 +26,13 @@ public class Tokenizer {
         this.tags = tags;
     }
 
-    /**
-     * The prototype implementation tries to match each token and selects the match with the lowest index.
-     * Slow but works.
-     */
-    public Token.Instance next(){
+    public Node build(){
+        // create tokenizer
+
+        // read next token
+
+        // add node according to token
+
         return null;
     }
 }

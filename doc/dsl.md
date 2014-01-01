@@ -1,4 +1,4 @@
-separator DSL
+Separator DSL
 =============
 
 status: working draft  
@@ -12,7 +12,7 @@ A simple language to parse based on separators. Simple that is simple such as re
 elements
 --
 
-**simple separator**
+### simple separator ###
 
     $line \n 
 

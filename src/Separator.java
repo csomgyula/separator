@@ -7,9 +7,9 @@ import separator.parser.Parser;
  */
 public class Separator {
     /**
-     * Parses the given text according to the given rules.
+     * Separate the given text according to the given rules.
      */
-    public Node parse(String rules, String text){
+    public Node separate(String rules, String text){
         return new Parser(rules).parse(text);
     }
 }
