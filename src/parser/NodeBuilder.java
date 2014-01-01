@@ -48,8 +48,9 @@ public class NodeBuilder {
             newNode.setKind(Node.Kind.LEAF);
             newNode.setContent( text.substring( textPosition, tokenInstance.getStartPosition() )  );
 
-            // add node
-            // the add logic depends on the tag: whether it is higher or deeper in the tag hierarchy
+            // add node - the add logic depends on the tag:
+            // whether it is higher or deeper in the tag hierarchy than the node cursor
+
             // if it is deeper in the tag hierarchy than the node cursor:
             if ( newNode.getTag().isDeeper( node.getTag() ) ){
                 // create missing parent nodes if necessary
@@ -79,7 +80,7 @@ public class NodeBuilder {
                      node = node.getParent();
                 }
             }
-            // if it is same in the hierarchy
+            // if they are same in the hierarchy
             else{
                 // add this node to the parent of the node cursor
                 node.getParent().addChild(newNode);
@@ -88,6 +89,8 @@ public class NodeBuilder {
                 node = newNode;
             }
 
+            // increment the text position
+            textPosition = tokenInstance.getEndPosition();
         }
 
         return root;

@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Represents a tag
+ * Represents a tag, ie. node type.
  */
 public class Tag {
     /**
