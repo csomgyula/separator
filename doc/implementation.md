@@ -19,14 +19,17 @@ Prototype:
 
 Beta and RFE:
 
-* error reporting
-* maybe logging
-* machine friendliness (fast, memory efficient)
-* more sophisticated navigation
-* (SAX-like) callbacks, maybe Java 8 functors
-* typesafe builders for primitive types (int, date) and objects
-* DSL dialects
-* rules by examples
+* engineering
+    * error reporting
+    * maybe logging
+    * machine friendliness (fast, memory efficient)
+* output
+    * more sophisticated navigation
+    * (SAX-like) callbacks, maybe Java 8 functors
+    * typesafe builders for primitive types (int, date) and objects
+* DSL
+    * DSL dialects
+    * rules by examples
 
 Public API
 --
