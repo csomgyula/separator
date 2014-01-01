@@ -7,7 +7,7 @@ date: 2013-12-30
 goal
 --
 
-A simple language to parse based on separators. Simple that is simple such as regular expressions and simpler than BNF.
+Define a simple parser language based on separators. Simple that is simple such as regular expressions and simpler than BNF.
 
 elements
 --
