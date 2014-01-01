@@ -27,6 +27,7 @@ public class Tag {
 
         tokenPair.setOpen(sosToken);
         tokenPair.setClose(eosToken);
+        tokenPair.setTag(tag);
 
         tag.getTokenPairs().add(tokenPair);
 
