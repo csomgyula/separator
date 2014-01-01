@@ -26,8 +26,7 @@ public class Compiler {
 
         // build tag list according to the rules
         Tag parent;
-        int index = 1;
-        String[] items = rules.split(" ");
+        String[] items = rules.split(" +");
         Token token;
         Pattern tagNamePattern = Pattern.compile("[a-zA-Z]+");
 
@@ -37,7 +36,7 @@ public class Compiler {
                 parent = tag;
                 tag = new Tag();
                 tag.setName(item);
-                tag.setIndex(index++);
+                tag.setIndex(parent.getIndex() + 1);
                 tag.setKind(Tag.Kind.SIMPLE);
                 tag.setParent(parent);
                 tags.add(tag);
