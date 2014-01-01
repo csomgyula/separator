@@ -4,13 +4,6 @@ package separator;
  * Represents a separator token.
  */
 public class Token {
-    public static Token eos(){
-        Token token = new Token();
-        token.setTag(Tag.eos());
-        token.setKind(Kind.EOS);
-        return token;
-    }
-
     private Tag tag;
     private String pattern;
     private Kind kind;
@@ -39,10 +32,6 @@ public class Token {
         this.kind = kind;
     }
 
-    public boolean isEOS(){
-        return kind == Kind.EOS;
-    }
-
     /**
      * Token types
      */
@@ -53,7 +42,7 @@ public class Token {
         // SKIP_OPEN, SKIP_ESCAPE, SKIP_CLOSE,
         // ESCAPE_OPEN, ESCAPE_ESCAPE, ESCAPE_CLOSE,
         // END,
-        EOS;
+        SOS, EOS;
     }
 
 
@@ -119,10 +108,6 @@ public class Token {
 
         public void setEndPosition(int endPosition) {
             this.endPosition = endPosition;
-        }
-
-        public boolean isEOS(){
-            return token.isEOS();
         }
     }
 }

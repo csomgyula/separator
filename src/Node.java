@@ -5,6 +5,8 @@ import java.util.List;
 
 /**
  * Represents a node within the tagged tree that is the output of separation.
+ *
+ * TODO: add source refs to nodes: open/close token, start/end index
  */
 public class Node {
     private Tag tag;

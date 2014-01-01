@@ -13,23 +13,31 @@ public class Tag {
     public static Tag root(){
         Tag tag = new Tag();
         tag.setKind(Kind.ROOT);
-        tag.setIndex(-1);
-        return tag;
-    }
+        tag.setIndex(0); // highest in hierarchy
 
-    /**
-     * Return an end-of-stream tag.
-     */
-    public static Tag eos(){
-        Tag tag = new Tag();
-        tag.setKind(Kind.EOS);
-        tag.setIndex(Integer.MAX_VALUE);
+        Token.Pair tokenPair = new Token.Pair();
+
+        Token sosToken = new Token();
+        sosToken.setKind(Token.Kind.SOS);
+        sosToken.setTag(tag);
+
+        Token eosToken = new Token();
+        eosToken.setKind(Token.Kind.EOS);
+        eosToken.setTag(tag);
+
+        tokenPair.setOpen(sosToken);
+        tokenPair.setClose(eosToken);
+
+        tag.getTokenPairs().add(tokenPair);
+
         return tag;
     }
 
     private String name;
 
     private List<Token> tokens;
+
+    private List<Token.Pair> tokenPairs;
 
     private Kind kind;
 
@@ -61,6 +69,13 @@ public class Tag {
             tokens = new ArrayList<Token>();
         }
         return tokens;
+    }
+
+    public List<Token.Pair> getTokenPairs() {
+        if (tokenPairs==null){
+            tokenPairs = new ArrayList<Token.Pair>();
+        }
+        return tokenPairs;
     }
 
     public int getIndex() {

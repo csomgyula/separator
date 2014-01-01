@@ -45,11 +45,12 @@ public class Tokenizer {
         int bestStart = text.length(), bestEnd = textPosition, bestTokenIndex = -1; // TODO: cache text length
 
         if (textPosition < text.length()) {
-
-            int start, end, matcherIndex = 0;
+            int start, end, matcherIndex;
+            HashMap<Tag, List<Matcher>> matcherMap = getMatcherMap();
             for (Tag tag : tags) {
+                matcherIndex = 0;
                 for (Matcher matcher : matcherMap.get(tag)) {
-                    // if there is a match for the current tag/match
+                    // if there is a match for the current tag/matcher
                     if (matcher.find(textPosition)) {
                         // get the positions
                         start = matcher.start();
@@ -80,7 +81,7 @@ public class Tokenizer {
         }
         // else emit and end-of-source token
         else {
-            token = Token.eos();
+            token = tags.get(0).getTokenPairs().get(0).getClose();
             tokenInstance.setToken(token);
             tokenInstance.setStartPosition(text.length()); // TODO: cache text length
             tokenInstance.setEndPosition(text.length()); // TODO: cache text length
@@ -96,12 +97,17 @@ public class Tokenizer {
         if (matcherMap == null) {
             matcherMap = new HashMap<Tag, List<Matcher>>();
 
-            List<Matcher> matchers = new ArrayList<Matcher>();
+            List<Matcher> matchers;
             Matcher matcher;
+            String pattern;
             for (Tag tag : tags) {
+                matchers = new ArrayList<Matcher>();
                 // build the matcher list
                 for (Token token : tag.getTokens()) {
-                    matchers.add(Pattern.compile(token.getPattern()).matcher(text));
+                    pattern = token.getPattern();
+                    if (pattern!=null){
+                        matchers.add(Pattern.compile(pattern).matcher(text));
+                    }
                 }
 
                 // add the matcher list to the map
