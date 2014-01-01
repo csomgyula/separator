@@ -87,10 +87,10 @@ Both `Tokenizer` and `NodeBuilder` relies upon **compiled rules**. It is the `Co
 `Separator` delegates to `Parser` which in turn delegates to `Compiler` and `NodeBuilder`. The main flow is the following:
 
 1. The `Separator` object instantiates a new `Parser` instance. 
-    1. The parser in turn compiles the rules by invoking the compile method of `Compiler`.
+    1. The parser in turn compiles the rules by invoking the `compile()` method of `Compiler`.
 2. The separator then invokes the `parse()` method of the parser. 
     1. The parser instantiates and configures a new `NodeBuilder` then
-    2. pass control to the builder by invoking its `build()` method
+    2. passes control to the builder by invoking its `build()` method
         1. The builder then builds the output tree according to the above pipeline architecture
         2. and returns the root `Node`.
     3. The parser returns the root as well.
