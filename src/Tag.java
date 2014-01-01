@@ -1,4 +1,4 @@
-package separator.parser;
+package separator;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -13,6 +13,7 @@ public class Tag {
     public static Tag root(){
         Tag tag = new Tag();
         tag.setKind(Kind.ROOT);
+        tag.setIndex(-1);
         return tag;
     }
 
@@ -22,6 +23,7 @@ public class Tag {
     public static Tag eos(){
         Tag tag = new Tag();
         tag.setKind(Kind.EOS);
+        tag.setIndex(Integer.MAX_VALUE);
         return tag;
     }
 
@@ -32,6 +34,8 @@ public class Tag {
     private Kind kind;
 
     private int index;
+
+    private Tag parent;
 
     public void setKind(Kind kind) {
         this.kind = kind;
@@ -65,6 +69,26 @@ public class Tag {
 
     public void setIndex(int index) {
         this.index = index;
+    }
+
+    public Tag getParent() {
+        return parent;
+    }
+
+    public void setParent(Tag parent) {
+        this.parent = parent;
+    }
+
+    public boolean isHigher(Tag tag){
+        return this.getIndex() < tag.getIndex();
+    }
+
+    public boolean isSame(Tag tag){
+        return this.getIndex() == tag.getIndex();
+    }
+
+    public boolean isDeeper(Tag tag){
+        return this.getIndex() > tag.getIndex();
     }
 
     /**

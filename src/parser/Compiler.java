@@ -1,5 +1,7 @@
 package separator.parser;
 
+import separator.Tag;
+
 import java.util.List;
 
 /**

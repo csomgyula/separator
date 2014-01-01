@@ -1,9 +1,15 @@
-package separator.parser;
+package separator;
 
 /**
  * Represents a separator token.
  */
 public class Token {
+    public static Token eos(){
+        Token token = new Token();
+        token.setTag(Tag.eos());
+        token.setKind(Kind.EOS);
+        return token;
+    }
 
     private Tag tag;
     private String pattern;
@@ -31,6 +37,10 @@ public class Token {
 
     public void setKind(Kind kind) {
         this.kind = kind;
+    }
+
+    public boolean isEOS(){
+        return kind == Kind.EOS;
     }
 
     /**
@@ -84,15 +94,15 @@ public class Token {
      * An instance has start position (inclusive) and end position (exclusive).
      */
     public static class Instance {
-        private Token type;
+        private Token token;
         private int startPosition, endPosition;
 
-        public Token getType() {
-            return type;
+        public Token getToken() {
+            return token;
         }
 
-        public void setType(Token type) {
-            this.type = type;
+        public void setToken(Token token) {
+            this.token = token;
         }
 
         public int getStartPosition() {
@@ -109,6 +119,10 @@ public class Token {
 
         public void setEndPosition(int endPosition) {
             this.endPosition = endPosition;
+        }
+
+        public boolean isEOS(){
+            return token.isEOS();
         }
     }
 }

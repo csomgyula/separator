@@ -7,17 +7,24 @@ import java.util.List;
  * Represents a node within the tagged tree that is the output of separation.
  */
 public class Node {
-    private String tag;
+    private Tag tag;
     private Kind kind;
     private Node parent;
     private String content;
     private List<Node> children;
 
-    public String getTag() {
+    public static Node root(){
+        Node node = new Node();
+        node.setKind(Kind.ROOT);
+        node.setTag(Tag.root());
+        return node;
+    }
+
+    public Tag getTag() {
         return tag;
     }
 
-    public void setTag(String tag) {
+    public void setTag(Tag tag) {
         this.tag = tag;
     }
 
@@ -42,6 +49,11 @@ public class Node {
             children = new ArrayList<Node>();
         }
         return children;
+    }
+
+    public void addChild(Node node){
+        getChildren().add(node);
+        node.setParent(this);
     }
 
     public String getContent() {

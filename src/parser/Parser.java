@@ -1,6 +1,7 @@
 package separator.parser;
 
 import separator.Node;
+import separator.Tag;
 
 import java.util.List;
 
