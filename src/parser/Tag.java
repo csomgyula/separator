@@ -29,10 +29,6 @@ public class Tag {
 
     private List<Token> tokens;
 
-    private List<Token.Pair> tokenPairs;
-
-    private List<Token> escapes;
-
     private Kind kind;
 
     private int index;
@@ -63,20 +59,6 @@ public class Tag {
         return tokens;
     }
 
-    public List<Token.Pair> getTokenPairs() {
-        if (tokenPairs ==null){
-            tokenPairs = new ArrayList<Token.Pair>();
-        }
-        return tokenPairs;
-    }
-
-    public List<Token> getEscapes() {
-        if (escapes==null){
-            escapes = new ArrayList<Token>();
-        }
-        return escapes;
-    }
-
     public int getIndex() {
         return index;
     }
@@ -90,13 +72,13 @@ public class Tag {
      */
     public enum Kind {
         ROOT,
-        EMPTY,
+        // EMPTY,
         SIMPLE,
-        BLOCK,
-        RECURSIVE_BLOCK,
+        // BLOCK,
+        // RECURSIVE_BLOCK,
         // SKIP,
-        ESCAPE,
-        END,
+        // ESCAPE,
+        // END,
         EOS;
     }
 }

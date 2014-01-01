@@ -38,11 +38,11 @@ public class Token {
      */
     public enum Kind {
         SIMPLE,
-        BLOCK_OPEN, BLOCK_CLOSE,
-        RECURSIVE_BLOCK_OPEN, RECURSIVE_BLOCK_CLOSE,
+        // BLOCK_OPEN, BLOCK_CLOSE,
+        // RECURSIVE_BLOCK_OPEN, RECURSIVE_BLOCK_CLOSE,
         // SKIP_OPEN, SKIP_ESCAPE, SKIP_CLOSE,
-        ESCAPE_OPEN, ESCAPE_ESCAPE, ESCAPE_CLOSE,
-        END,
+        // ESCAPE_OPEN, ESCAPE_ESCAPE, ESCAPE_CLOSE,
+        // END,
         EOS;
     }
 

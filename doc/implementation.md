@@ -10,10 +10,12 @@ Roadmap
 Prototype:
 
 1. simple separator + nesting
-1. recursive block
-1. escape separator
-1. end separator
-1. simple block, skip
+2. recursive block
+3. escape separator
+4. end separator
+5. simple block
+6. skip
+7. optional separator 
 
 Beta and RFE:
 
@@ -21,9 +23,10 @@ Beta and RFE:
 * maybe logging
 * machine friendliness (fast, memory efficient)
 * more sophisticated navigation
-* DSL dialects
 * (SAX-like) callbacks, maybe Java 8 functors
-* typesafe builders
+* typesafe builders for primitive types (int, date) and objects
+* DSL dialects
+* rules by examples
 
 Public API
 --
@@ -38,7 +41,7 @@ The prototype API consists of two classes: `Separator` and `Node`:
 `Separator` can separate the given text according to the given rules. Has one method: `separate`:
 
  * `Node separate(String rules, String text)` - parses the given text according to the given rules:
-    * separation `rules` must be given in the form of the [separator DSL](separator-dsl.md)
+    * separation `rules` must be given in the form of the [separator DSL](dsl.md)
     * `text` can be any string
     * on successfull parsing it returns the root node of the tagged tree (see below)
 
