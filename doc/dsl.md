@@ -7,7 +7,10 @@ date: 2013-12-30
 goal
 --
 
-Define a simple parser language based on separators. Simple that is simple such as regular expressions and simpler than BNF.
+Define a simple parser language based on separators: 
+
+* _simple_ that is simple such as regular expressions and simpler than BNF.
+* _based on separators_ that is similar but more sophisticated than `String.split()` built into Java.
 
 elements
 --
