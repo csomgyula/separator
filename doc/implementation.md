@@ -9,13 +9,13 @@ Roadmap
 
 Prototype:
 
-1. simple separator + nesting
-2. recursive block
-3. escape separator
-4. end separator
-5. simple block
-6. skip
-7. optional separator 
+* simple separator + nesting
+* recursive block
+* escape separator
+* end separator
+* simple block
+* skip
+* optional separator 
 
 Beta and RFE:
 
@@ -31,7 +31,7 @@ Beta and RFE:
 Public API
 --
 
-The prototype API consists of two classes: `Separator` and `Node`:
+The prototype API consists of two main classes: `Separator` and `Node`:
 
 * `Separator` is the main class that exposes the separator interface
 * `Node` represents a node in the tagged tree that is the output of separation
@@ -61,11 +61,11 @@ The output of separation is a tagged tree which is represented by `Node`s.
 
 A node
 
-* has a tag (name): `String getTag()`
+* has a tag that represents its type: `Tag getTag()`
 * has a kind which can be either `ROOT` or `BRANCH` or `LEAF`
 * except root has parent: `Node getParent()`
-* may have content: `String getContent()`
-* may have child nodes if it is a branch node: `List<Node> getChildren()`
+* may have content if it is a leaf node: `String getContent()`
+* may have child nodes if it is a root or branch node: `List<Node> getChildren()`
 
 Prototype implementation
 --
