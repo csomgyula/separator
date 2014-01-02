@@ -133,9 +133,6 @@ The language can be expressed in itself:-)
 
     $def $ $def @ $item \s*
 
-This sample also shows that one can use the same *tag tag* repeatedly.
+This sample also shows that one can use the same *tag* repeatedly.
 
-TODO
---
 
-* nesting simple separators within blocks

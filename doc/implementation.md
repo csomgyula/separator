@@ -17,7 +17,6 @@ Prototype:
 * trim
 * simple block
 * skip
-* optional separator 
 
 Beta and RFE:
 
@@ -102,55 +101,3 @@ Both `Tokenizer` and `NodeBuilder` relies upon **compiled rules**. It is the `Co
 3. Finally the separator returns the root node as well.
 
 
-TODO
---
-
-* Compiled `Separator`
-
-The `Separator` interface has a light weight or scripting style. It is optimal if someone has to parse different, "random" formats. However it is not optimal in use cases when someone has to parse texts of the same format. A stateful design would match such situations better, ie.:
-
-     // compiles the rules
-     public Separator(String rules){...}
-
-     // rules given to the constructor are reused, no need to pass
-     public Node separate(String text){...}
-
-In this case one can use the same separator to separate texts of the same format, ie.:
- 
-    Separator csvSeparator = new Separator("record \n field ;");
-
-    String csv1, csv2,...;
-
-    // read csv files...
-
-    Node node1 = csvSeparator.separate(csv1);
-    Node node2 = csvSeparator.separate(csv2);
-    ...
-
-* Streaming
-
-Handle input streams, files directly.
-
-* Named rules
-
-For mixed formats... Sample:
-
-    rules:
-        csv(;): record \n field ;
-        csv(,): record \n field , 
-    input: 
-        @csv(;) field11; field12\nfield21; field22\n
-        @csv(,) field11, field12\nfield21, field22
-
-Problem: how to differentiate between format switch and special values? Ie. the above could be parsed as 
-
-        | @csv(;) field11          | field12 |
-        | field21                  | field22 |
-        | @csv(,) field11, field12 |
-        | field21, field22         |
-
-MIME multiparts or such...?
-
-    input:
-        csv(;)@SOS@field11; field12\nfield21; field22@EOS@
-        csv(,)@SOS@field11, field12\nfield21, field22@EOS@
