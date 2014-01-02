@@ -30,13 +30,28 @@ public class NodeBuilder {
         this.tags = tags;
     }
 
+    /**
+     * Builds the output tree according to the input text and the tokens emited by the tokenizer.
+     * <p/>
+     * Logic:
+     * * new nodes are added as leaves, their tag is always the lowest in hiearchy that is independent from the tag of the token
+     * * if the node cursor is higher in the hierarchy (grandpa or higher) create necessary parent nodes
+     * * if the token is
+     *   * the root tag close nodes below by moving the cursor to the root
+     *   * the leaf tag then move the cursor to the new node's parent
+     *   * is not the leaf tag and not the root then close the node and nodes below by moving the cursor to its parent
+     */
     public Node build() {
-        // create tokenizer
+        // -- ------------------------------------------------------------------------------------------------------
+        // -- create tokenizer
+        // -- ------------------------------------------------------------------------------------------------------
         Tokenizer tokenizer = new Tokenizer();
         tokenizer.setTags(tags);
         tokenizer.setText(text);
 
-        // create root node
+        // -- ------------------------------------------------------------------------------------------------------
+        // -- create root node
+        // -- ------------------------------------------------------------------------------------------------------
         Node root = Node.root();
         root.setTag(tags.get(0));
 
@@ -44,22 +59,35 @@ public class NodeBuilder {
         Token.Instance tokenInstance;
         Node node = root, newNode, childNode, parentNode;
         Tag tokenInstanceTag;
+        Tag leafTag = tags.get(tags.size() - 1), rootTag = tags.get(0);
         while (textPosition < text.length()) { // TODO: cache text length
-            // read next token
+            // -- ------------------------------------------------------------------------------------------------------
+            // -- read next token
+            // -- ------------------------------------------------------------------------------------------------------
             tokenInstance = tokenizer.next();
 
-            // build the new node
+            // -- ------------------------------------------------------------------------------------------------------
+            // -- build new node
+            // -- ------------------------------------------------------------------------------------------------------
+            // * new nodes are added as leaves,
+            // * their tag is always the lowest in hiearchy that is independent from the tag of the token
             newNode = new Node();
-            newNode.setTag(tokenInstance.getToken().getTag());
+            newNode.setTag(leafTag);
             newNode.setKind(Node.Kind.LEAF);
             newNode.setContent(text.substring(textPosition, tokenInstance.getStartPosition()));
 
-            // add node - the add logic depends on the tag:
-            // whether it is higher or deeper in the tag hierarchy than the node cursor
-
-            // if it is deeper in the tag hierarchy than the node cursor:
-            if (newNode.getTag().isDeeper(node.getTag())) {
-                // create missing parent nodes if necessary
+            // -- ------------------------------------------------------------------------------------------------------
+            // -- add new node
+            // -- ------------------------------------------------------------------------------------------------------
+            // if the node cursor's tag is same or the parent then add directly
+            if (newNode.getTag() == node.getTag()){
+                node.getParent().addChild(newNode);
+            }
+            else if (newNode.getTag().getParent() == node.getTag()){
+                node.addChild(newNode);
+            }
+            // if the node cursor is higher in the hierarchy (grandpa or higher) create necessary parent nodes
+            else{
                 childNode = newNode;
                 while (childNode.getTag().getParent() != node.getTag()) {
                     parentNode = new Node();
@@ -69,43 +97,31 @@ public class NodeBuilder {
                     childNode = parentNode;
                 }
                 node.addChild(childNode);
+            }
 
-                // move node cursor down to the new node
+            // -- ------------------------------------------------------------------------------------------------------
+            // -- move the cursor and close higher node if necessary
+            // -- ------------------------------------------------------------------------------------------------------
+            tokenInstanceTag = tokenInstance.getToken().getTag();
+            // if the token tag is the root tag then close everything lower by moving the cursor to the root
+            if(tokenInstanceTag == rootTag){
+                node = root;
+            }
+            // if the token is the leaf tag and not the root tag, nothing is closed just move the cursor to the new node's parent
+            else if (tokenInstanceTag == leafTag && tokenInstanceTag != rootTag){
+               node = newNode.getParent();
+            }
+            // if the token is neither the leaf tag nor the root tag then close the associated node that is move the cursor to its parent
+            else if(tokenInstanceTag != rootTag){
                 node = newNode;
-            }
-            // if it is higher in the hierarchy than the node cursor:
-            else if (newNode.getTag().isHigher(node.getTag())) {
-                // replace tag with the node's tag
-                newNode.setTag(node.getTag());
-
-                // add this node to the parent of the node cursor
-                node.getParent().addChild(newNode);
-
-                tokenInstanceTag = tokenInstance.getToken().getTag();
-
-                // if not root move the cursor up to the parent of the token tag
-                if (tokenInstanceTag.getKind() != Tag.Kind.ROOT) {
-                    while (node.getTag() != tokenInstanceTag.getParent()) {
-                        node = node.getParent();
-                    }
-                }
-                else{
-                    node = root;
-                }
-            }
-            // if they are same in the hierarchy
-            else {
-                // add this node to the parent of the node cursor  except it is the root node
-                if (node.getTag().getKind() != Tag.Kind.ROOT) {
-                    node.getParent().addChild(newNode);
-                    // set the node cursor to this
-                    node = newNode;
-                } else {
-                    node.setContent(newNode.getContent());
+                while(node.getTag() != tokenInstanceTag.getParent()){
+                    node = node.getParent();
                 }
             }
 
-            // increment the text position
+            // -- ------------------------------------------------------------------------------------------------------
+            // -- increment the text position
+            // -- ------------------------------------------------------------------------------------------------------
             textPosition = tokenInstance.getEndPosition();
         }
 

@@ -9,10 +9,12 @@ Roadmap
 
 Prototype:
 
-* simple separator + nesting
+* simple separator + nesting - DONE
 * recursive block
 * escape separator
 * end separator
+* empty separator
+* trim
 * simple block
 * skip
 * optional separator 
@@ -55,7 +57,7 @@ Sample: parsing a CSV file
     String csv;
     // read csv file...
 
-    Node root = separator.separate("record \\n field ;", csv)
+    Node root = separator.separate("record \n field ;", csv)
 
     
 ### Node ###
@@ -115,7 +117,7 @@ The `Separator` interface has a light weight or scripting style. It is optimal i
 
 In this case one can use the same separator to separate texts of the same format, ie.:
  
-    Separator csvSeparator = new Separator("record \\n field ;");
+    Separator csvSeparator = new Separator("record \n field ;");
 
     String csv1, csv2,...;
 
@@ -128,3 +130,27 @@ In this case one can use the same separator to separate texts of the same format
 * Streaming
 
 Handle input streams, files directly.
+
+* Named rules
+
+For mixed formats... Sample:
+
+    rules:
+        csv(;): record \n field ;
+        csv(,): record \n field , 
+    input: 
+        @csv(;) field11; field12\nfield21; field22\n
+        @csv(,) field11, field12\nfield21, field22
+
+Problem: how to differentiate between format switch and special values? Ie. the above could be parsed as 
+
+        | @csv(;) field11          | field12 |
+        | field21                  | field22 |
+        | @csv(,) field11, field12 |
+        | field21, field22         |
+
+MIME multiparts or such...?
+
+    input:
+        csv(;)@SOS@field11; field12\nfield21; field22@EOS@
+        csv(,)@SOS@field11, field12\nfield21, field22@EOS@
