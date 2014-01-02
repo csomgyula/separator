@@ -25,7 +25,7 @@ Simple separators are used to separate a list of elements. It behaves similarly 
 
 In the above sample the tagname is `line` and the separator is the new line character `\n`. If you apply the above rule then it will extract each line from the original text, each of them will be tagged with the given tagname, ie.:
 
-    Separator.separate("line \n", "simple separator\nseparates\na list of elements");
+    separator.separate("line \n", "simple separator\nseparates\na list of elements");
 
 will produce the following tree:
 
@@ -47,7 +47,7 @@ Where
 
 the following code snippet
 
-    Separator.separate("sentence \.|!|?", "Separator is an enchanced form of split. It can be used to parse simple structures.");
+    separator.separate("sentence \\.|!|\\?", "Separator is an enchanced form of split. It can be used to parse simple structures.");
 
 will produce the following tree:
 
@@ -72,7 +72,7 @@ If you apply the above against a string read from a CSV file, for instance a CSV
 
 then separator will parse the file, ie.:
 
-    Separator.separate("record \n field ;", csv);
+    separator.separate("record \n field ;", csv);
 
 will produce the following tree:
 

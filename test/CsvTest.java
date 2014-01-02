@@ -4,6 +4,7 @@ import separator.Node;
 import separator.Separator;
 
 /**
+ * Separators xan be nested
  */
 public class CsvTest {
     public static void main(String[] args){
