@@ -27,6 +27,13 @@ public class NodeToString {
         // ident
         ident(string, ident);
 
+        // source position
+        string.append("@(");
+        string.append(node.getStartPosition());
+        string.append(",");
+        string.append(node.getEndPosition());
+        string.append(") ");
+
         // tag name and index
         string.append(node.getTag().getName());
         if (node.getTag().getKind() != Tag.Kind.ROOT){

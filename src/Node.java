@@ -14,6 +14,7 @@ public class Node {
     private Node parent;
     private String content;
     private List<Node> children;
+    private Token.Instance open, close;
 
     public static Node root(){
         Node node = new Node();
@@ -64,6 +65,56 @@ public class Node {
 
     public void setContent(String content) {
         this.content = content;
+    }
+
+    /**
+     * Returns the token at the start of the node.
+     */
+    public Token.Instance getOpen() {
+        return open;
+    }
+
+    public void setOpen(Token.Instance open) {
+        this.open = open;
+    }
+
+    /**
+     * Returns the token at the end of the node.
+     */
+    public Token.Instance getClose() {
+        return close;
+    }
+
+    public void setClose(Token.Instance close) {
+        this.close = close;
+    }
+
+    /**
+     * Returns the text position at the start of the node (inclusive).
+     *
+     * That is this node represents substring(startPosition, endPosition).
+     */
+    public int getStartPosition(){
+        Token.Instance open = getOpen();
+        if (open != null){
+            return open.getEndPosition();
+        }
+        else{
+            return -1;
+        }
+    }
+
+    /**
+     * Returns the text position at the end of the node (exclusive).
+     */
+    public int getEndPosition(){
+        Token.Instance close = getClose();
+        if (close != null){
+            return close.getStartPosition();
+        }
+        else{
+            return -1;
+        }
     }
 
     public enum Kind{
