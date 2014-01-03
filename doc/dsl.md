@@ -4,7 +4,7 @@ Separator DSL
 status: working draft  
 date: 2013-12-30
 
-goal
+Goal
 --
 
 Define a simple parser language based on separators: 
@@ -12,14 +12,14 @@ Define a simple parser language based on separators:
 * _simple_ that is simple such as regular expressions and simpler than BNF.
 * _based on separators_ that is similar but more sophisticated than [`String.split()`](http://docs.oracle.com/javase/7/docs/api/java/lang/String.html#split%28java.lang.String%29) built into Java.
 
-separators
+Separators
 --
 
 ### Simple separator ###
 
 Simple separators are used to separate a list of elements. It behaves similarly  as [`String.split()`](http://docs.oracle.com/javase/7/docs/api/java/lang/String.html#split%28java.lang.String%29). When defining such a separator you should give it a *tagname* and the separator *pattern* itself.
 
-*Sample*: 
+**Sample**: 
 
     line \n 
 
@@ -36,30 +36,42 @@ will produce the following tree:
 
 Tags are useful when there are many separators, see more samples below.
 
-*Syntax*:
+**Syntax**:
 
-    simple := tag pattern
+    tag pattern+
 
 Where 
 
-* *tag* is a word `[a-zA-Z]+`
-* *pattern* is a regular expression, however it cannot be word, sample: `sentence \.|!|?` will extract sentences from the given text, ie.:
+* `tag` is a word: `[a-zA-Z]+`, sample: `line`
 
-the following code snippet
+* `pattern` is a regular expression, however it cannot be word, sample: 
 
-    separator.separate("sentence \\.|!|\\?", "Separator is an enchanced form of split. It can be used to parse simple structures.");
+    sentence \.|!|\? 
+
+will extract sentences from the given text, ie.: the following code snippet
+
+    separator.separate("sentence \\.|!|\\?", "What is separator? Separator is an enchanced form of split. It can be used to parse simple structures.");
 
 will produce the following tree:
 
     @ROOT:
-      sentence(1): Separator is an enchanced form of split
-      sentence(2): It can be used to parse simple structures
+      sentence(1): What is separator
+      sentence(2): Separator is an enchanced form of split
+      sentence(3): It can be used to parse simple structures
+
+* `pattern+`: you may give more than one pattern, sample: 
+
+the above definition could be rewritten as:
+
+    sentence \. ! \? 
+
+this will produce the same result as above.
 
 ### Nesting simple separators ###
 
 Since Java has a built in [`split`](http://docs.oracle.com/javase/7/docs/api/java/lang/String.html#split%28java.lang.String%29) method, simple separators are not extremely useful themselves. However you can nest such separators.
 
-*Sample*: The following defines two nested separators
+**Sample**: The following defines two nested separators
 
     record \n field ;
 
@@ -90,61 +102,158 @@ will produce the following tree:
 	    field(2): 1801
 	    field(3): 1809
 
-*Syntax*: simply concatenate the simple separator definitions one after the other:
+**Syntax**: simply concatenate the simple separator definitions one after the other:
+    
+    (tag pattern+)+
 
-    simple1 simple2... <=> tag1 pattern1 tag2 pattern2...
+ie.:
+
+    tag1 pattern11 pattern12... tag2 pattern21 pattern22...
 
 You should give the topmost separator first, the one below the topmost next, etc.
 
 When nesting simple separators the result tree will always have a constant depth: the depth is the number of separators (not counting the root node). For instance in the above CSV example the depth is always 2 (not counting the root).
 
-### simple block ###
+### Simple block ###
 
-    $quote " "
+Simple block separates blocks of contents. Besides this they separates external contents (contents outside of blocks) as well. *Simple* here means that blocks are not "recursive": you cannot nest a simple block inside a block of the same type. If you need recursivity then use recursive blocks (see below).
 
-Block separators separate internal content (the content within the start separator char and the end separator char) from external content. In this case the quotian mark separates the quoted string from the rest of the content.
+**Sample**: In the following sample the block separates content enclosed in double paranthesis:
+
+    [variable] {{ }}
+
+This could be used to implement simple templating, ie.:
+
+    separator.separate("[variable] {{ }}", "Hello {{name}}!");
+
+will produce the following tree:
+
+    @ROOT:
+      variableExt(1): Hello
+      variable(2):    name
+      variableExt(3): !
+
+Now you can implement templating like this:
+
+1./ implement a template function:
+
+    public String template(List<Node> nodes, Hashtable<String> vars){
+        StringBuilder sb = new StringBuilder();
+
+        // iterate through nodes
+        for (Node node : nodes){
+            String content = node.getContent();
+
+            // if node represents a variable then get the dynamic value
+            if (node.isTypeOf("variable"){
+               content = vars.get(content);
+            }
+               
+            sb.append(content);
+        }
+
+        return sb.toString();
+    }
+
+2./ parse the template:
+
+    Node root = separator.separate("[variable] {{ }}", "Hello {{name}}!");
+
+3./ get the dynamic values, for instance:
+
+    Hashtable vars = new Hashtable();
+    vars.put("name", "world");
+
+4./ pass the parsed template and the vars to the above function
+
+    template(root.getChildren(), vars);
+
+which will then produce:
+
+    Hello world!
+
+The above simple definition will name external nodes as `variableExt`. That is nodes outside of blocks will have a tag with `variableExt` as tagname. Generally the name is autogenerated from the block name: `${blockName}Ext`. If you do not want to use this convention, you can explicitely name the external content, like this:
+
+    [variable:constant] {{ }}
+
+then
+
+    separator.separate("[variable:constant] {{ }}", "Hello {{name}}!");
+
+will produce the following tree:
+
+    @ROOT:
+      constant(1): Hello
+      variable(2): name
+      constant(3): !
+ 
+**Syntax**:
+
+    "["tagname(:extName)?"]" (openPattern closePattern)+
+
+* `[...]` represents the separator type, ie.: simple block
+
+* `tag` is the tagname, must be a word: `[a-zA-Z]+`
+
+* `openPattern closePattern` represents the opening and closing patterns, must be valid regular expressions, however cannot be words
+
+* `(openPattern closePattern)+`: you can define more than one patterns, ie.: `[variable:constant] {{ }} [[ ]]` is a valid definition which will handle both type of parenthesis as "variables".
+
+**TODO**: Do we really need simple blocks? Wouldn't it be "better" to just use recursive blocks?
+
+### Nesting simple blocks ###
+
+**TODO**
+
+You cannot nest a simple block inside a block of the same  type. However you can freely nest blocks of different types and simple separators.
+
 
 ### recursive block ###
 
-    paren@recursive ( )
-    block@rec { }
+**TODO**
 
 A recursive block is a special block where blocks can be nested within each other.
 
-`recursive` is a special keyword. Such keywords are prefixed with the `@` symbol. TODO: a better syntax?
-
-### no separator ###
-
-    body
-
-In this case the content will be treated as whole, ie. with no separators.
+    {block} { }
+    @recursiveBlock block { }
 
 ### escape ###
 
-    @escape // \n
-    @esc /* */
+**TODO**
 
 An escape escapes from normal parsing rules. That is to say separator rules are 'suspended' within an escape sequence. 
 
+    @escape " "
+    ^quote^ " "
+
 One can define escape within an escape itself with th `^` character:
 
-    @escape " ^\" "
+    ^quote^ " ^\" "
+
+### skip ###
+
+**TODO**
+
+    @skip // \n
+    ^^comment^^ // \n /* */
 
 ### trim ###
 
-    @trim \s \n
+**TODO**
 
-You can trim the content with the `trim` keyword.
+You can trim the content with the `@trim` keyword.
+
+    -whitespace \s
+    @trim \s \n
 
 ### end of parsing ###
 
+**TODO**
+
+You can stop parsing before the end of source reached with the `@end` keyword:
+
+    doubleCarriege. \r\r
     @end \r\r
-
-The `end` keyword terminates the previous separator rules. This is useful in two cases: if you do not want to parse the whole string or if you want to apply different separator rules for the different part of the string. For instance you can define the following rule to parse HTTP:
-
-    $header \n @end \r\r $body
-
-This will extract lines from the string until it finds two carriage returns, then it treats the rest as a whole.
 
 samples
 --
@@ -209,5 +318,4 @@ The language can be expressed in itself:-)
     $def $ $def @ $item \s*
 
 This sample also shows that one can use the same *tag* repeatedly.
-
 
