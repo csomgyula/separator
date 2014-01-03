@@ -26,16 +26,16 @@ public class Compiler {
 
         // build tag list according to the rules
         Tag parent;
-        String[] items = rules.split(" +");
+        String[] rulesParts = rules.split(" +");
         Token token;
         Pattern tagNamePattern = Pattern.compile("[a-zA-Z]+");
 
-        for (String item : items){
+        for (String rulesPart : rulesParts){
             // if item is a tagname:
-            if ( tagNamePattern.matcher(item).matches() ){
+            if ( tagNamePattern.matcher(rulesPart).matches() ){
                 parent = tag;
                 tag = new Tag();
-                tag.setName(item);
+                tag.setName(rulesPart);
                 tag.setIndex(parent.getIndex() + 1);
                 tag.setKind(Tag.Kind.SIMPLE);
                 tag.setParent(parent);
@@ -43,9 +43,9 @@ public class Compiler {
             }
             // else it is a token
             else{
-                if (tag == null) throw new NullPointerException("token without tag: " + item);
+                if (tag == null) throw new NullPointerException("token without tag: " + rulesPart);
                 token = new Token();
-                token.setPattern(item);
+                token.setPattern( Pattern.compile(rulesPart) );
                 token.setKind(Token.Kind.SIMPLE);
                 token.setTag(tag);
                 tag.getTokens().add(token);

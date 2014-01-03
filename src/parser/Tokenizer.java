@@ -3,9 +3,7 @@ package separator.parser;
 import separator.Tag;
 import separator.Token;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -19,18 +17,23 @@ public class Tokenizer {
 
     private int textPosition;
 
+    private FiniteAutomata finiteAutomata;
+
     /**
-     * The text to tokenize.
+     * Set the text to tokenize.
      */
     public void setText(String text) {
         this.text = text;
         textPosition = 0;
-        matcherMap = null;
+        finiteAutomata = null;
     }
 
+    /**
+     * Set the tokenization rules.
+     */
     public void setTags(List<Tag> tags) {
         this.tags = tags;
-        matcherMap = null;
+        finiteAutomata = null;
     }
 
     /**
@@ -38,82 +41,421 @@ public class Tokenizer {
      * Slow but works.
      */
     public Token.Instance next() {
-        Tag bestTag = null;
+        FiniteAutomata finiteAutomata = getFiniteAutomata();
 
-        Token.Instance tokenInstance = new Token.Instance();
+        // if tokenizer not finished
+        if (!finiteAutomata.isFinished()){
+
+            // get the best match if any
+            Token.Instance tokenInstance = match();
+
+            // if there was a match then move the text position to token end
+            if (tokenInstance != null) {
+                textPosition = tokenInstance.getEndPosition();
+            }
+            // else emit an end-of-source token unless there's a block open
+            else if (finiteAutomata.getOpenCount() == 1) {
+                Token.Pair rootTokenPair = tags.get(0).getTokenPairs().get(0);
+
+                // close the root tag in the automata
+                finiteAutomata.close(rootTokenPair);
+
+                // emit EOS
+                tokenInstance = new Token.Instance();
+                tokenInstance.setToken(rootTokenPair.getClose());
+                tokenInstance.setStartPosition(text.length()); // TODO: cache text length
+                tokenInstance.setEndPosition(text.length()); // TODO: cache text length
+
+                // move text position to the end
+                textPosition = text.length(); // TODO: cache text length
+            }
+            // else throw exception
+            else {
+                throw new RuntimeException("A block is not closed"); // TODO: better error message
+            }
+            return tokenInstance;
+        }
+        // if tokenizer finished throw exception
+        else{
+            throw new RuntimeException("No more tokens");
+        }
+    }
+
+    /**
+     * The prototype implementation tries to match each token (pattern) and selects the match with the best index(es).
+     * Slow but works.
+     */
+    // if there's more text then execute the following algorithm:
+    //
+    // 1. iterate through tag matchers
+    //     1.1. iterate through the current tag's matchers
+    //         1.1.1. match against the current matcher and if there is a match
+    //             1.1.1.1. get the match positions
+    //             1.1.1.2. compare with the current best one and if it is better then
+    //                 1.1.1.2.1. replace the best match with this
+    //                 1.1.1.2.2. if it is a block match then notify the finite automata, especially
+    //                     1.1.1.2.2.1. if it is a block open then trigger open
+    //                     1.1.1.2.2.2. if it is a block close then trigger close
+    protected Token.Instance match() {
+        // -- ----------------------------------------------------------------------------------------------------------
+        // -- match
+        // -- ----------------------------------------------------------------------------------------------------------
+        Token bestToken = null;
 
         int bestStart = text.length(), bestEnd = textPosition, bestTokenIndex = -1; // TODO: cache text length
 
+        FiniteAutomata finiteAutomata = getFiniteAutomata();
+
         if (textPosition < text.length()) {
-            int start, end, matcherIndex;
-            HashMap<Tag, List<Matcher>> matcherMap = getMatcherMap();
-            for (Tag tag : tags) {
-                matcherIndex = 0;
-                for (Matcher matcher : matcherMap.get(tag)) {
-                    // if there is a match for the current tag/matcher
+            int start, end;
+            FiniteAutomata.TagMatchers tagMatchers = finiteAutomata.getTagMatchers();
+            Matcher matcher;
+            Token token;
+
+            // 1. iterate through tag matchers
+            for (List<FiniteAutomata.TokenMatcher> tagTokenMatchers : tagMatchers) {
+                // 1.1. iterate through the current tag's matchers
+                for (FiniteAutomata.TokenMatcher tokenMatcher : tagTokenMatchers) {
+                    // 1.1.1. match against the current matcher and if there is a match
+                    matcher = tokenMatcher.getMatcher();
                     if (matcher.find(textPosition)) {
-                        // get the positions
+                        token = tokenMatcher.getToken();
+
+                        // 1.1.1.1. get the match positions
                         start = matcher.start();
                         end = matcher.end();
 
-                        // if this match is better than the current best one
+                        // 1.1.1.2. compare with the current best one and if it is better
                         if (start < bestStart || (start == bestStart && end > bestEnd)) {
-                            // replace the best match with this
+                            //  1.1.1.2.1. replace the best match with this
                             bestStart = start;
                             bestEnd = end;
-                            bestTag = tag;
-                            bestTokenIndex = matcherIndex;
+                            bestToken = token;
+
+                            //  1.1.1.2.2. if it is a block match then notify the finite automata
+                            if (token.getTag().getKind() == Tag.Kind.SIMPLE_BLOCK) {
+
+                                // 1.1.1.2.2.1. if it is a block open then trigger open
+                                if (token.getKind() == Token.Kind.SIMPLE_BLOCK_OPEN) {
+                                    finiteAutomata.open(tokenMatcher.getTokenPair());
+                                }
+                                // 1.1.1.2.2.2. if it is a block close then trigger close
+                                else if (token.getKind() == Token.Kind.SIMPLE_BLOCK_CLOSE) {
+                                    finiteAutomata.close(tokenMatcher.getTokenPair());
+                                }
+                            }
                         }
                     }
-                    matcherIndex++;
                 }
             }
         }
 
-        Token token;
-        // if there was a match then emit the associated token
-        if (bestTag != null) {
-            token = bestTag.getTokens().get(bestTokenIndex);
-            tokenInstance.setToken(token);
+        if (bestToken != null) {
+            Token.Instance tokenInstance = new Token.Instance();
+            tokenInstance.setToken(bestToken);
             tokenInstance.setStartPosition(bestStart);
             tokenInstance.setEndPosition(bestEnd);
-            textPosition = bestEnd;
+            return tokenInstance;
+        } else {
+            return null;
         }
-        // else emit and end-of-source token
-        else {
-            token = tags.get(0).getTokenPairs().get(0).getClose();
-            tokenInstance.setToken(token);
-            tokenInstance.setStartPosition(text.length()); // TODO: cache text length
-            tokenInstance.setEndPosition(text.length()); // TODO: cache text length
-            textPosition = text.length(); // TODO: cache text length
-        }
-        return tokenInstance;
     }
 
-    protected HashMap<Tag, List<Matcher>> matcherMap;
+    protected FiniteAutomata getFiniteAutomata() {
+        if (finiteAutomata == null) {
+            finiteAutomata = new FiniteAutomata();
+        }
+        return finiteAutomata;
+    }
 
-    // TODO: should be moved to the compiler?
-    protected HashMap<Tag, List<Matcher>> getMatcherMap() {
-        if (matcherMap == null) {
-            matcherMap = new HashMap<Tag, List<Matcher>>();
+    /**
+     * Finite automata. Must not be used in parallel.
+     * <p/>
+     * States
+     * ------
+     * <p/>
+     * STATE := (T1, T2, ...) a stack of token pairs, including the root (SOS, EOS)
+     * <p/>
+     * impl.: STATE will be represented as a stack (ArrayDeque).
+     * <p/>
+     * The top most token is special, so lets give it a name for now:
+     * <p/>
+     * top := the topmost token pair
+     * <p/>
+     * Matchers
+     * --------
+     * The main function of STATE is to determine the matchers associated with it:
+     * <p/>
+     * matchers(STATE) := closeMatcher(top) + normalMatcersBelow(top)
+     * unless top is null, in this special case matcher list is null as well
+     * <p/>
+     * that is:
+     * * closeMatcher(top) - the matcher of the close token of the topmost token pair, plus
+     * * normalMatchersBelow(top) - the normal tokens below the top most tag, where normal tokens is defined as:
+     * <p/>
+     * normalMatchersBelow(T) = the matchers of normal separators, and the matchers of the open tokens of a block.
+     * <p/>
+     * impl.: this will be represented as a list with a sliding start pointer.
+     * <p/>
+     * Initial and end states
+     * ----------------------
+     * <p/>
+     * initial:  initially only the root token pair is added, so matchers represent EOS + normal matchers below root
+     * end:      the stack is empty, no token pairs
+     * <p/>
+     * State changes
+     * -------------
+     * open(B):  when a new block B is opened => the associated token pair is pushed to the STATE stack
+     * close(B): when a block B is closed => the associated token pair is popped from the STATE stack
+     */
+    protected class FiniteAutomata {
 
-            List<Matcher> matchers;
-            Matcher matcher;
-            String pattern;
-            for (Tag tag : tags) {
-                matchers = new ArrayList<Matcher>();
-                // build the matcher list
-                for (Token token : tag.getTokens()) {
-                    pattern = token.getPattern();
-                    if (pattern!=null){
-                        matchers.add(Pattern.compile(pattern).matcher(text));
+        private Deque<Token.Pair> state;
+        private TagMatchers tagMatchers;
+        private int openCount;
+
+        public FiniteAutomata() {
+            Token.Pair rootTokenPair = tags.get(0).getTokenPairs().get(0);
+            open(rootTokenPair);
+        }
+
+        protected Deque<Token.Pair> getState() {
+            if (state == null) {
+                state = new ArrayDeque<Token.Pair>();
+            }
+            return state;
+        }
+
+        public void open(Token.Pair tokenPair) {
+            getState().push(tokenPair);
+            getTagMatchers().down(tokenPair.getTag());
+            openCount++;
+        }
+
+        public void close(Token.Pair tokenPair) {
+            getState().pop();
+            getTagMatchers().up();
+            openCount--;
+        }
+
+        public int getOpenCount() {
+            return openCount;
+        }
+
+        public boolean isFinished() {
+            return getState().isEmpty();
+        }
+
+        /**
+         * Represents the matchers for and below a tag. Initially the tag is root, that is it represents EOS + normal
+         * matchers below the root.
+         */
+        public TagMatchers getTagMatchers() {
+            if (tagMatchers == null) {
+                tagMatchers = new TagMatchers();
+            }
+            return tagMatchers;
+        }
+
+        /**
+         * Represents the token matchers for and below a tag. That is the matchers of the close tokens of the tag +
+         * the normal matchers below the tag.
+         * The tag is handled as a pointer. Initially it points up to the root which is a special position - means
+         * not yet started. The FiniteAutomata when initialized will then move it automatically to position 0.
+         */
+        protected class TagMatchers implements Iterable<List<TokenMatcher>> {
+            private int tagPosition;
+
+            private List<List<TokenMatcher>> normalMatchersList;
+            private List<List<TokenMatcher>> closeMatchersList;
+
+            public TagMatchers() {
+                tagPosition = -1; // initially it is asscoiated with a special position.
+                normalMatchersList = new ArrayList<List<TokenMatcher>>();
+                closeMatchersList = new ArrayList<List<TokenMatcher>>();
+
+                for (Tag tag : tags) {
+                    normalMatchersList.add(getNormalMatchers(tag, text));
+                    closeMatchersList.add(getCloseMatchers(tag, text));
+                }
+            }
+
+            /**
+             * Move down in tag hierarchy to the given tag.
+             */
+            public void down(Tag tag) {
+                while (tags.get(++tagPosition) != tag) {
+                }
+            }
+
+            /**
+             * Move up in tag hierarchy.
+             */
+            public void up() {
+                tagPosition--;
+            }
+
+            private Iterator<List<TokenMatcher>> iterator;
+
+            @Override
+            public Iterator<List<TokenMatcher>> iterator() {
+                if (iterator == null) {
+                    iterator = new MatchersIterator();
+                }
+                return iterator;
+            }
+
+            /**
+             * Iterator of matchers. Must not be used in parallel.
+             */
+            protected class MatchersIterator implements Iterator<List<TokenMatcher>> {
+                private int iteratorPosition, endPosition;
+
+                public MatchersIterator() {
+                    this.iteratorPosition = tagPosition;
+                    this.endPosition = tags.size();
+                }
+
+                public boolean hasNext() {
+                    if (tagPosition == -1) {
+                        return false;
+                    } else {
+                        boolean hasNextMatchers = iteratorPosition < endPosition;
+                        if (!hasNextMatchers) {
+                            reset();
+                        }
+                        return hasNextMatchers;
                     }
                 }
 
-                // add the matcher list to the map
-                matcherMap.put(tag, matchers);
+                /**
+                 * Return the next matchers.
+                 * * If the cursor points to the tag, then return the matchers of the close tokens.
+                 * * If the cursor points below the tag, then return the normal matchers of the tag.
+                 *
+                 * @return
+                 */
+                public List<TokenMatcher> next() {
+                    if (hasNext()) {
+                        if (iteratorPosition == tagPosition) {
+                            return closeMatchersList.get(iteratorPosition++);
+                        } else {
+                            return normalMatchersList.get(iteratorPosition++);
+                        }
+                    } else {
+                        reset();
+                        throw new ArrayIndexOutOfBoundsException();
+                    }
+                }
+
+                public void remove() {
+                    throw new UnsupportedOperationException();
+                }
+
+                /**
+                 * Resets the iterator to point to the tag.
+                 * Automatically invoked by hasNext() and next() after the iterator reached the end of tags.
+                 */
+                protected void reset() {
+                    this.iteratorPosition = tagPosition;
+                }
+            }
+
+            /**
+             * Return the normal matchers of a tag. That is matchers:
+             * * of tokens for a simple separator.
+             * * of open tokens for a simple block separator.
+             */
+            protected List<TokenMatcher> getNormalMatchers(Tag tag, String text) {
+                Pattern pattern;
+                List<TokenMatcher> tokenMatchers = new ArrayList<TokenMatcher>();
+                TokenMatcher tokenMatcher;
+
+                // build the matcher list
+                if (tag.getKind() == Tag.Kind.SIMPLE) {
+                    for (Token token : tag.getTokens()) {
+                        pattern = token.getPattern();
+                        if (pattern != null) {
+                            tokenMatcher = new TokenMatcher();
+                            tokenMatcher.setMatcher(pattern.matcher(text));
+                            tokenMatcher.setToken(token);
+                            tokenMatchers.add(tokenMatcher);
+                        }
+                    }
+                } else if (tag.getKind() == Tag.Kind.SIMPLE_BLOCK) {
+                    Token token;
+                    for (Token.Pair tokenPair : tag.getTokenPairs()) {
+                        token = tokenPair.getOpen();
+                        pattern = token.getPattern();
+                        if (pattern != null) {
+                            tokenMatcher = new TokenMatcher();
+                            tokenMatcher.setMatcher(pattern.matcher(text));
+                            tokenMatcher.setTokenPair(tokenPair);
+                            tokenMatcher.setToken(token);
+                            tokenMatchers.add(tokenMatcher);
+                        }
+                    }
+                }
+                return tokenMatchers;
+            }
+
+            /**
+             * Return the matchers of close tokens of block separators and empty matcher list for simple separators.
+             */
+            protected List<TokenMatcher> getCloseMatchers(Tag tag, String text) {
+                Pattern pattern;
+                List<TokenMatcher> tokenMatchers = new ArrayList<TokenMatcher>();
+                // build the matcher list
+                if (tag.getKind() == Tag.Kind.SIMPLE_BLOCK) {
+                    TokenMatcher tokenMatcher;
+                    Token token;
+                    for (Token.Pair tokenPair : tag.getTokenPairs()) {
+                        token = tokenPair.getOpen();
+                        pattern = token.getPattern();
+                        if (pattern != null) {
+                            tokenMatcher = new TokenMatcher();
+                            tokenMatcher.setMatcher(pattern.matcher(text));
+                            tokenMatcher.setTokenPair(tokenPair);
+                            tokenMatcher.setToken(token);
+                            tokenMatchers.add(tokenMatcher);
+                        }
+                    }
+                }
+                return tokenMatchers;
             }
         }
-        return matcherMap;
+
+        /**
+         * Represents a regexp matcher associated with a token.
+         */
+        protected class TokenMatcher {
+            Matcher matcher;
+            Token.Pair tokenPair;
+            Token token;
+
+            public Matcher getMatcher() {
+                return matcher;
+            }
+
+            public void setMatcher(Matcher matcher) {
+                this.matcher = matcher;
+            }
+
+            public Token.Pair getTokenPair() {
+                return tokenPair;
+            }
+
+            public void setTokenPair(Token.Pair tokenPair) {
+                this.tokenPair = tokenPair;
+            }
+
+            public Token getToken() {
+                return token;
+            }
+
+            public void setToken(Token token) {
+                this.token = token;
+            }
+        }
     }
 }

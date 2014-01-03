@@ -25,14 +25,5 @@ public class CsvTest {
         System.out.println("Number of records: " + node.getChildren().size());
         NodeToString nodeToString = new NodeToString();
         System.out.println(nodeToString.toString(node));
-
-/*        int index1 = 0, index2;
-        for (Node record : node.getChildren()){
-            System.out.println(record.getTag().getName()+ "(" +  (index1++) + "):");
-            index2 = 0;
-            for (Node field : record.getChildren()){
-                System.out.println("\t" +field.getTag().getName()+ "(" +  (index2++) + "): " + field.getContent());
-            }
-        }*/
     }
 }

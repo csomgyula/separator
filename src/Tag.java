@@ -113,8 +113,8 @@ public class Tag {
     public enum Kind {
         ROOT,
         // EMPTY,
-        SIMPLE;
-        // BLOCK,
+        SIMPLE,
+        SIMPLE_BLOCK;
         // RECURSIVE_BLOCK,
         // SKIP,
         // ESCAPE,

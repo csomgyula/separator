@@ -1,11 +1,13 @@
 package separator;
 
+import java.util.regex.Pattern;
+
 /**
  * Represents a separator token.
  */
 public class Token {
     private Tag tag;
-    private String pattern;
+    private Pattern pattern;
     private Kind kind;
 
     public Tag getTag() {
@@ -16,11 +18,11 @@ public class Token {
         this.tag = tag;
     }
 
-    public String getPattern() {
+    public Pattern getPattern() {
         return pattern;
     }
 
-    public void setPattern(String pattern) {
+    public void setPattern(Pattern pattern) {
         this.pattern = pattern;
     }
 
@@ -37,7 +39,7 @@ public class Token {
      */
     public enum Kind {
         SIMPLE,
-        // BLOCK_OPEN, BLOCK_CLOSE,
+        SIMPLE_BLOCK_OPEN, SIMPLE_BLOCK_CLOSE,
         // RECURSIVE_BLOCK_OPEN, RECURSIVE_BLOCK_CLOSE,
         // SKIP_OPEN, SKIP_ESCAPE, SKIP_CLOSE,
         // ESCAPE_OPEN, ESCAPE_ESCAPE, ESCAPE_CLOSE,
