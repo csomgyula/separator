@@ -2,7 +2,7 @@ Separator DSL
 =============
 
 status: working draft  
-date: 2013-12-30
+date: 2013-01-04
 
 Goal
 --
@@ -116,7 +116,7 @@ When nesting simple separators the result tree will always have a constant depth
 
 ### Simple block ###
 
-Simple block separates blocks of contents. Besides this they separates external contents (contents outside of blocks) as well. *Simple* here means that blocks are not "recursive": you cannot nest a simple block inside a block of the same type. If you need recursivity then use recursive blocks (see below).
+Simple blocks separate blocks of contents. Besides this they separate external contents (contents outside of blocks) as well. *Simple* here means that blocks are not "recursive": you cannot nest a simple block inside a block of the same type. If you need recursivity then use recursive blocks (see below).
 
 **Sample**: In the following sample the block separates content enclosed in double paranthesis:
 
@@ -145,7 +145,7 @@ Now you can implement templating like this:
             String content = node.getContent();
 
             // if node represents a variable then get the dynamic value
-            if (node.isTypeOf("variable"){
+            if (node.isA("variable"){
                content = vars.get(content);
             }
                

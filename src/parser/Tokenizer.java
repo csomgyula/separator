@@ -17,7 +17,7 @@ public class Tokenizer {
 
     private int textPosition;
 
-    private FiniteAutomata finiteAutomata;
+    private MatcherAutomata matcherAutomata;
 
     /**
      * Set the text to tokenize.
@@ -25,7 +25,7 @@ public class Tokenizer {
     public void setText(String text) {
         this.text = text;
         textPosition = 0;
-        finiteAutomata = null;
+        matcherAutomata = null;
     }
 
     /**
@@ -33,7 +33,7 @@ public class Tokenizer {
      */
     public void setTags(List<Tag> tags) {
         this.tags = tags;
-        finiteAutomata = null;
+        matcherAutomata = null;
     }
 
     /**
@@ -41,24 +41,24 @@ public class Tokenizer {
      * Slow but works.
      */
     public Token.Instance next() {
-        FiniteAutomata finiteAutomata = getFiniteAutomata();
+        MatcherAutomata matcherAutomata = getMatcherAutomata();
 
         // if tokenizer not finished
-        if (!finiteAutomata.isFinished()){
+        if (!matcherAutomata.isFinished()){
 
             // get the best match if any
             Token.Instance tokenInstance = match();
 
-            // if there was a match then move the text position to token end
+            // if there was a match then move the text position to token's end position
             if (tokenInstance != null) {
                 textPosition = tokenInstance.getEndPosition();
             }
             // else emit an end-of-source token unless there's a block open
-            else if (finiteAutomata.getOpenCount() == 1) {
+            else if (matcherAutomata.getOpenCount() == 1) {
                 Token.Pair rootTokenPair = tags.get(0).getTokenPairs().get(0);
 
                 // close the root tag in the automata
-                finiteAutomata.close(rootTokenPair);
+                matcherAutomata.close(rootTokenPair);
 
                 // emit EOS
                 tokenInstance = new Token.Instance();
@@ -104,18 +104,18 @@ public class Tokenizer {
 
         int bestStart = text.length(), bestEnd = textPosition, bestTokenIndex = -1; // TODO: cache text length
 
-        FiniteAutomata finiteAutomata = getFiniteAutomata();
+        MatcherAutomata matcherAutomata = getMatcherAutomata();
 
         if (textPosition < text.length()) {
             int start, end;
-            FiniteAutomata.TagMatchers tagMatchers = finiteAutomata.getTagMatchers();
+            MatcherAutomata.TagMatchers tagMatchers = matcherAutomata.getTagMatchers();
             Matcher matcher;
             Token token;
 
             // 1. iterate through tag matchers
-            for (List<FiniteAutomata.TokenMatcher> tagTokenMatchers : tagMatchers) {
+            for (List<MatcherAutomata.TokenMatcher> tagTokenMatchers : tagMatchers) {
                 // 1.1. iterate through the current tag's matchers
-                for (FiniteAutomata.TokenMatcher tokenMatcher : tagTokenMatchers) {
+                for (MatcherAutomata.TokenMatcher tokenMatcher : tagTokenMatchers) {
                     // 1.1.1. match against the current matcher and if there is a match
                     matcher = tokenMatcher.getMatcher();
                     if (matcher.find(textPosition)) {
@@ -137,11 +137,11 @@ public class Tokenizer {
 
                                 // 1.1.1.2.2.1. if it is a block open then trigger open
                                 if (token.getKind() == Token.Kind.SIMPLE_BLOCK_OPEN) {
-                                    finiteAutomata.open(tokenMatcher.getTokenPair());
+                                    matcherAutomata.open(tokenMatcher.getTokenPair());
                                 }
                                 // 1.1.1.2.2.2. if it is a block close then trigger close
                                 else if (token.getKind() == Token.Kind.SIMPLE_BLOCK_CLOSE) {
-                                    finiteAutomata.close(tokenMatcher.getTokenPair());
+                                    matcherAutomata.close(tokenMatcher.getTokenPair());
                                 }
                             }
                         }
@@ -161,15 +161,15 @@ public class Tokenizer {
         }
     }
 
-    protected FiniteAutomata getFiniteAutomata() {
-        if (finiteAutomata == null) {
-            finiteAutomata = new FiniteAutomata();
+    protected MatcherAutomata getMatcherAutomata() {
+        if (matcherAutomata == null) {
+            matcherAutomata = new MatcherAutomata();
         }
-        return finiteAutomata;
+        return matcherAutomata;
     }
 
     /**
-     * Finite automata. Must not be used in parallel.
+     * Finite automata of matchers. Must not be used in parallel.
      * <p/>
      * States
      * ------
@@ -208,13 +208,13 @@ public class Tokenizer {
      * open(B):  when a new block B is opened => the associated token pair is pushed to the STATE stack
      * close(B): when a block B is closed => the associated token pair is popped from the STATE stack
      */
-    protected class FiniteAutomata {
+    protected class MatcherAutomata {
 
         private Deque<Token.Pair> state;
         private TagMatchers tagMatchers;
         private int openCount;
 
-        public FiniteAutomata() {
+        public MatcherAutomata() {
             Token.Pair rootTokenPair = tags.get(0).getTokenPairs().get(0);
             open(rootTokenPair);
         }
@@ -261,7 +261,7 @@ public class Tokenizer {
          * Represents the token matchers for and below a tag. That is the matchers of the close tokens of the tag +
          * the normal matchers below the tag.
          * The tag is handled as a pointer. Initially it points up to the root which is a special position - means
-         * not yet started. The FiniteAutomata when initialized will then move it automatically to position 0.
+         * not yet started. The MatcherAutomata when initialized will then move it automatically to position 0.
          */
         protected class TagMatchers implements Iterable<List<TokenMatcher>> {
             private int tagPosition;
