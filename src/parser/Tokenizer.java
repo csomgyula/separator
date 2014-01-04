@@ -9,6 +9,8 @@ import java.util.regex.Pattern;
 
 /**
  * Prototype implementation of the tokenizer.
+ *
+ * TODO: simple patterns should be handled as strings instead of regexps. For instance the ability to use "{{" instead  of "\\{\\{"
  */
 public class Tokenizer {
     private List<Tag> tags;
@@ -410,7 +412,7 @@ public class Tokenizer {
                     TokenMatcher tokenMatcher;
                     Token token;
                     for (Token.Pair tokenPair : tag.getTokenPairs()) {
-                        token = tokenPair.getOpen();
+                        token = tokenPair.getClose();
                         pattern = token.getPattern();
                         if (pattern != null) {
                             tokenMatcher = new TokenMatcher();

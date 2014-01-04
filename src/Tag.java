@@ -46,6 +46,8 @@ public class Tag {
 
     private Tag parent;
 
+    private Tag blockExt;
+
     public void setKind(Kind kind) {
         this.kind = kind;
     }
@@ -95,16 +97,20 @@ public class Tag {
         this.parent = parent;
     }
 
-    public boolean isHigher(Tag tag){
-        return this.getIndex() < tag.getIndex();
+    public Tag getBlockExt() {
+        return blockExt;
     }
 
-    public boolean isSame(Tag tag){
-        return this.getIndex() == tag.getIndex();
+    public void setBlockExt(Tag blockExt) {
+        this.blockExt = blockExt;
     }
 
-    public boolean isDeeper(Tag tag){
-        return this.getIndex() > tag.getIndex();
+    public boolean isA(String tag){
+        return getName().equals(tag);
+    }
+
+    public boolean isA(Kind kind){
+        return getKind() == kind;
     }
 
     /**
@@ -114,7 +120,7 @@ public class Tag {
         ROOT,
         // EMPTY,
         SIMPLE,
-        SIMPLE_BLOCK;
+        SIMPLE_BLOCK, SIMPLE_BLOCK_EXT;
         // RECURSIVE_BLOCK,
         // SKIP,
         // ESCAPE,

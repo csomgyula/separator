@@ -1,4 +1,4 @@
-package separator.test;
+package separator.sample;
 
 import separator.Node;
 import separator.Tag;
@@ -32,10 +32,12 @@ public class NodeToString {
         string.append(node.getStartPosition());
         string.append(",");
         string.append(node.getEndPosition());
-        string.append(") ");
+        string.append(")\t");
 
         // tag name and index
         string.append(node.getTag().getName());
+        string.append("@");
+        string.append(node.getKind());
         if (node.getTag().getKind() != Tag.Kind.ROOT){
             string.append("(");
             string.append(index);
@@ -52,6 +54,7 @@ public class NodeToString {
         // children
         index = 0;
         for (Node child : node.getChildren()){
+            assert child != node;
             toString(index++, child, string, ident+1);
         }
     }

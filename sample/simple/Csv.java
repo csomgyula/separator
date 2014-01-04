@@ -1,12 +1,15 @@
-package separator.test;
+package separator.sample.simple;
 
 import separator.Node;
 import separator.Separator;
 
+import java.lang.String;
+import java.lang.System;
+
 /**
  * Separators xan be nested
  */
-public class CsvTest {
+public class Csv {
     public static void main(String[] args){
         String rules = "record \n field ;";
 
@@ -23,7 +26,7 @@ public class CsvTest {
         Node node = separator.separate(rules, csv);
 
         System.out.println("Number of records: " + node.getChildren().size());
-        NodeToString nodeToString = new NodeToString();
+        separator.sample.NodeToString nodeToString = new separator.sample.NodeToString();
         System.out.println(nodeToString.toString(node));
     }
 }

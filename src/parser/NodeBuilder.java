@@ -32,16 +32,16 @@ public class NodeBuilder {
      * Builds the tagged tree and returns its root.
      */
     public Node build() {
-        // -- ------------------------------------------------------------------------------------------------------
+        // -- ----------------------------------------------------------------------------------------------------------
         // -- create tokenizer
-        // -- ------------------------------------------------------------------------------------------------------
+        // -- ----------------------------------------------------------------------------------------------------------
         Tokenizer tokenizer = new Tokenizer();
         tokenizer.setTags(tags);
         tokenizer.setText(text);
 
-        // -- ------------------------------------------------------------------------------------------------------
+        // -- ----------------------------------------------------------------------------------------------------------
         // -- init node automata
-        // -- ------------------------------------------------------------------------------------------------------
+        // -- ----------------------------------------------------------------------------------------------------------
         // TODO: SOS, EOS could be moved to shared code
         Tag rootTag = tags.get(0);
         Token sosToken = rootTag.getTokenPairs().get(0).getOpen();
@@ -52,9 +52,9 @@ public class NodeBuilder {
 
         NodeAutomata nodeAutomata = new NodeAutomata(sosTokenInstance);
 
-        // -- ------------------------------------------------------------------------------------------------------
+        // -- ----------------------------------------------------------------------------------------------------------
         // -- main loop
-        // -- ------------------------------------------------------------------------------------------------------
+        // -- ----------------------------------------------------------------------------------------------------------
         Token.Instance nextTokenInstance;
         int textPosition = 0;
 
@@ -65,9 +65,9 @@ public class NodeBuilder {
             textPosition = nextTokenInstance.getEndPosition();
         }
 
-        // -- ------------------------------------------------------------------------------------------------------
+        // -- ----------------------------------------------------------------------------------------------------------
         // -- closing
-        // -- ------------------------------------------------------------------------------------------------------
+        // -- ----------------------------------------------------------------------------------------------------------
         // it is possible that some nodes are not closed (if the end of the string is a separator then EOS is not read
         // hence root is not closed)
         // if root is closed then everything else is closed, hence it is enough to check whether root is closed
@@ -84,9 +84,13 @@ public class NodeBuilder {
     }
 
     /**
-     * Implements the main logic.
+     * Main logic is implemented as a finite automata. Not thread safe, serial in nature.
      */
-    protected class NodeAutomata{
+    protected class NodeAutomata {
+
+        // -- ----------------------------------------------------------------------------------------------------------
+        // -- States
+        // -- ----------------------------------------------------------------------------------------------------------
 
         private Tag leafTag;
 
@@ -95,9 +99,30 @@ public class NodeBuilder {
         private Token.Instance prevTokenInstance, nextTokenInstance;
 
         /**
+         * Returns the root node.
+         */
+        public Node getRoot() {
+            return root;
+        }
+
+        /**
+         * Returns the leaf tag. Cached.
+         */
+        protected Tag getLeafTag() {
+            if (leafTag == null) {
+                leafTag = tags.get(tags.size() - 1);
+            }
+            return leafTag;
+        }
+
+        // -- ----------------------------------------------------------------------------------------------------------
+        // -- Init
+        // -- ----------------------------------------------------------------------------------------------------------
+
+        /**
          * Initializes the automata, especially creates the root node.
          */
-        public NodeAutomata(Token.Instance sosTokenInstance){
+        public NodeAutomata(Token.Instance sosTokenInstance) {
             // create root node
             Node root = Node.root();
             root.setTag(tags.get(0));
@@ -109,31 +134,39 @@ public class NodeBuilder {
             prevTokenInstance = sosTokenInstance;
         }
 
-        public Node getRoot() {
-            return root;
-        }
-
-        // -- --------------------------------------------------------------------------------------------------------------
-        // -- Handles
-        // -- --------------------------------------------------------------------------------------------------------------
-
+        // -- ----------------------------------------------------------------------------------------------------------
+        // -- Input actions
+        // -- ----------------------------------------------------------------------------------------------------------
         public void handleNextToken(Token.Instance nextTokenInstance) {
             this.nextTokenInstance = nextTokenInstance;
 
-            switch (nextTokenInstance.getToken().getKind()){
-                case SIMPLE_BLOCK_OPEN: handleSimpleBlockOpen(); break;
-                case EOS: handleEOS(); break;
-                default: handleDefaultCase(); break;
+            switch (nextTokenInstance.getToken().getKind()) {
+                case SIMPLE_BLOCK_OPEN:
+                    handleSimpleBlockOpen();
+                    break;
+                case EOS:
+                    handleEOS();
+                    break;
+                default:
+                    handleDefaultCase();
+                    break;
 
             }
 
             this.prevTokenInstance = nextTokenInstance;
         }
 
+        // -- ----------------------------------------------------------------------------------------------------------
+        // -- Internal actions
+        // -- ----------------------------------------------------------------------------------------------------------
         protected void handleSimpleBlockOpen() {
             newContentNode(false);
             closeNodeAssociatedWithToken();
-            openSimpleBlockNode();
+
+            // open block only if it is not leaf
+            //if (nextTokenInstance.getToken().getTag() != getLeafTag()){
+                openSimpleBlockNode();
+            //}
         }
 
         private void handleEOS() {
@@ -146,10 +179,6 @@ public class NodeBuilder {
             closeNodeAssociatedWithToken();
         }
 
-        // -- --------------------------------------------------------------------------------------------------------------
-        // -- Utils
-        // -- --------------------------------------------------------------------------------------------------------------
-
         /**
          * Creates a new content node and adds it to the cursor.
          * Cursor points to the new node.
@@ -160,17 +189,42 @@ public class NodeBuilder {
             boolean empty = startPosition == endPosition;
 
             if (maybeEmpty || !empty) {
-                Node node = new Node();
+                Node node;
+                Token nextToken = nextTokenInstance.getToken();
+                boolean newNode = false;
 
-                node.setTag(getLeafTag());
-                node.setKind(Node.Kind.LEAF);
+                // special case when root is the leaf
+                if (getLeafTag().isA(Tag.Kind.ROOT)){
+                    node = root;
+                }
+                // special case when cursor is a leaf open block
+                else if (cursorNode.isA(Node.Kind.LEAF)  && cursorNode.getTag().isA(Tag.Kind.SIMPLE_BLOCK)){
+                    node = cursorNode;
+                }
+                // normal case when (1) root is not the leaf and (2) there's no open block as leaf
+               else {
+                    node = new Node();
+                    newNode = true;
+
+                    // special case when (1) the leaf is a block and (2) next token is not close
+                    if (getLeafTag().isA(Tag.Kind.SIMPLE_BLOCK) && !nextToken.isA(Token.Kind.SIMPLE_BLOCK_CLOSE)){
+                        node.setTag(getLeafTag().getBlockExt());
+                    }
+                    // normal case
+                   else{
+                        node.setTag(getLeafTag());
+                    }
+
+                    node.setKind(Node.Kind.LEAF);
+                    node.setOpen(prevTokenInstance);
+                }
 
                 node.setContent(text.substring(startPosition, endPosition));
-
-                node.setOpen(prevTokenInstance);
                 node.setClose(nextTokenInstance);
 
-                addNode(node);
+                if (newNode){
+                    addNode(node);
+                }
 
                 cursorNode = node;
             }
@@ -183,7 +237,7 @@ public class NodeBuilder {
         protected void closeNodeAssociatedWithToken() {
             Tag tokenTag = nextTokenInstance.getToken().getTag();
 
-            while (cursorNode.getTag() != tokenTag) {
+            while (cursorNode.getTag().getIndex() != tokenTag.getIndex()) {
                 cursorNode.setClose(nextTokenInstance);
                 cursorNode = cursorNode.getParent();
             }
@@ -194,18 +248,18 @@ public class NodeBuilder {
 
         /**
          * Create a simple block (not SOS) and add it to the cursors.
-         * Cursor is positioned to the new block node.
-         *
-         * FIXME: Block is created as a branch node, which is not good if the block is the lowest in the tag hierarchy.
+         * Cursor is positioned to the new block node..
          */
         protected void openSimpleBlockNode() {
             Node node = new Node();
 
             node.setTag(nextTokenInstance.getToken().getTag());
 
-            node.setKind(Node.Kind.BRANCH); // FIXME: handle special case when simple block is the deepest tag
+            // node kind depends on whether the block is a leaf or not
+            Node.Kind nodeKind = nextTokenInstance.getToken().getTag() != leafTag ? Node.Kind.BRANCH : Node.Kind.LEAF;
+            node.setKind(nodeKind);
 
-            node.setOpen(prevTokenInstance);
+            node.setOpen(nextTokenInstance);
 
             addNode(node);
 
@@ -218,7 +272,10 @@ public class NodeBuilder {
         protected void addNode(Node node) {
             // if the node cursor's tag is the same or the parent then add directly
             if (node.getTag() == cursorNode.getTag()) {
-                cursorNode.getParent().addChild(node);
+                // normal case when root is not leaf
+                if (node.getTag().getKind() != Tag.Kind.ROOT){
+                    cursorNode.getParent().addChild(node);
+                }
             } else if (node.getTag().getParent() == cursorNode.getTag()) {
                 cursorNode.addChild(node);
             }
@@ -236,16 +293,5 @@ public class NodeBuilder {
                 cursorNode.addChild(childNode);
             }
         }
-
-        /**
-         * Returns the leaf tag. Cached.
-         */
-        protected Tag getLeafTag() {
-            if (leafTag==null){
-                leafTag = tags.get(tags.size() - 1);
-            }
-            return leafTag;
-        }
     }
-
 }

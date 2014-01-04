@@ -34,6 +34,10 @@ public class Token {
         this.kind = kind;
     }
 
+    public boolean isA(Kind kind){
+        return getKind() == kind;
+    }
+
     /**
      * Token types
      */

@@ -117,6 +117,14 @@ public class Node {
         }
     }
 
+    public boolean isA(String tag){
+        return getTag().getName().equals(tag);
+    }
+
+    public boolean isA(Kind kind){
+        return getKind() == kind;
+    }
+
     public enum Kind{
         ROOT,
         BRANCH,
