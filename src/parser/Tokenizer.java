@@ -102,7 +102,7 @@ public class Tokenizer {
         // -- ----------------------------------------------------------------------------------------------------------
         // -- match
         // -- ----------------------------------------------------------------------------------------------------------
-        Token bestToken = null;
+        MatcherAutomata.TokenMatcher bestTokenMatcher = null;
 
         int bestStart = text.length(), bestEnd = textPosition, bestTokenIndex = -1; // TODO: cache text length
 
@@ -132,27 +132,29 @@ public class Tokenizer {
                             //  1.1.1.2.1. replace the best match with this
                             bestStart = start;
                             bestEnd = end;
-                            bestToken = token;
-
-                            //  1.1.1.2.2. if it is a block match then notify the finite automata
-                            if (token.getTag().getKind() == Tag.Kind.SIMPLE_BLOCK) {
-
-                                // 1.1.1.2.2.1. if it is a block open then trigger open
-                                if (token.getKind() == Token.Kind.SIMPLE_BLOCK_OPEN) {
-                                    matcherAutomata.open(tokenMatcher.getTokenPair());
-                                }
-                                // 1.1.1.2.2.2. if it is a block close then trigger close
-                                else if (token.getKind() == Token.Kind.SIMPLE_BLOCK_CLOSE) {
-                                    matcherAutomata.close(tokenMatcher.getTokenPair());
-                                }
-                            }
+                            bestTokenMatcher = tokenMatcher;
                         }
                     }
                 }
             }
         }
 
-        if (bestToken != null) {
+        if (bestTokenMatcher != null) {
+            Token bestToken = bestTokenMatcher.getToken();
+
+            //  1. if it is a block match then notify the finite automata
+            if (bestToken.getTag().getKind() == Tag.Kind.SIMPLE_BLOCK) {
+
+                // 1.1. if it is a block open then trigger open
+                if (bestToken.getKind() == Token.Kind.SIMPLE_BLOCK_OPEN) {
+                    matcherAutomata.open(bestTokenMatcher.getTokenPair());
+                }
+                // 1.2. if it is a block close then trigger close
+                else if (bestToken.getKind() == Token.Kind.SIMPLE_BLOCK_CLOSE) {
+                    matcherAutomata.close(bestTokenMatcher.getTokenPair());
+                }
+            }
+
             Token.Instance tokenInstance = new Token.Instance();
             tokenInstance.setToken(bestToken);
             tokenInstance.setStartPosition(bestStart);
@@ -230,13 +232,13 @@ public class Tokenizer {
 
         public void open(Token.Pair tokenPair) {
             getState().push(tokenPair);
-            getTagMatchers().down(tokenPair.getTag());
+            getTagMatchers().open(tokenPair.getTag());
             openCount++;
         }
 
         public void close(Token.Pair tokenPair) {
             getState().pop();
-            getTagMatchers().up();
+            getTagMatchers().close();
             openCount--;
         }
 
@@ -267,12 +269,15 @@ public class Tokenizer {
          */
         protected class TagMatchers implements Iterable<List<TokenMatcher>> {
             private int tagPosition;
+            private boolean[] openTags;
 
-            private List<List<TokenMatcher>> normalMatchersList;
-            private List<List<TokenMatcher>> closeMatchersList;
+            private List<List<TokenMatcher>> normalMatchersList; // FIXME: normal matcher list could be an array
+            private List<List<TokenMatcher>> closeMatchersList;  // FIXME: close matcher list could be an array
 
             public TagMatchers() {
                 tagPosition = -1; // initially it is asscoiated with a special position.
+                openTags = new boolean[tags.size()];
+
                 normalMatchersList = new ArrayList<List<TokenMatcher>>();
                 closeMatchersList = new ArrayList<List<TokenMatcher>>();
 
@@ -285,26 +290,33 @@ public class Tokenizer {
             /**
              * Move down in tag hierarchy to the given tag.
              */
-            public void down(Tag tag) {
+            public void open(Tag tag) {
                 while (tags.get(++tagPosition) != tag) {
                 }
+                openTags[tagPosition] = true;
             }
 
             /**
              * Move up in tag hierarchy.
              */
-            public void up() {
-                tagPosition--;
+            public void close() {
+                // mark tag not open
+                openTags[tagPosition] = false;
+
+                // move to the first open tag or 0  FIXME: is slow
+                while (tagPosition > 0 && openTags[--tagPosition] == false) {
+                }
+                // move to -1 if there's no open tag
+                if (tagPosition == 0 && openTags[0] == false){
+                    tagPosition--;
+                }
             }
 
             private Iterator<List<TokenMatcher>> iterator;
 
             @Override
             public Iterator<List<TokenMatcher>> iterator() {
-                if (iterator == null) {
-                    iterator = new MatchersIterator();
-                }
-                return iterator;
+                return new MatchersIterator();
             }
 
             /**
@@ -322,11 +334,7 @@ public class Tokenizer {
                     if (tagPosition == -1) {
                         return false;
                     } else {
-                        boolean hasNextMatchers = iteratorPosition < endPosition;
-                        if (!hasNextMatchers) {
-                            reset();
-                        }
-                        return hasNextMatchers;
+                        return iteratorPosition < endPosition;
                     }
                 }
 
@@ -345,7 +353,6 @@ public class Tokenizer {
                             return normalMatchersList.get(iteratorPosition++);
                         }
                     } else {
-                        reset();
                         throw new ArrayIndexOutOfBoundsException();
                     }
                 }
@@ -354,13 +361,6 @@ public class Tokenizer {
                     throw new UnsupportedOperationException();
                 }
 
-                /**
-                 * Resets the iterator to point to the tag.
-                 * Automatically invoked by hasNext() and next() after the iterator reached the end of tags.
-                 */
-                protected void reset() {
-                    this.iteratorPosition = tagPosition;
-                }
             }
 
             /**

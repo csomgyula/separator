@@ -32,12 +32,12 @@ public class NodeToString {
         string.append(node.getStartPosition());
         string.append(",");
         string.append(node.getEndPosition());
-        string.append(")\t");
+        string.append(") ");
 
         // tag name and index
         string.append(node.getTag().getName());
-        string.append("@");
-        string.append(node.getKind());
+        //string.append("@");
+        //string.append(node.getKind());
         if (node.getTag().getKind() != Tag.Kind.ROOT){
             string.append("(");
             string.append(index);

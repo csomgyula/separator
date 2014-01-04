@@ -162,11 +162,7 @@ public class NodeBuilder {
         protected void handleSimpleBlockOpen() {
             newContentNode(false);
             closeNodeAssociatedWithToken();
-
-            // open block only if it is not leaf
-            //if (nextTokenInstance.getToken().getTag() != getLeafTag()){
-                openSimpleBlockNode();
-            //}
+            openSimpleBlockNode();
         }
 
         private void handleEOS() {
@@ -188,30 +184,36 @@ public class NodeBuilder {
 
             boolean empty = startPosition == endPosition;
 
-            if (maybeEmpty || !empty) {
+            // FIXME: avoid empty nodes, something like this (but its to agressive):
+            // maybeEmpty = maybeEmpty && nextTokenInstance.getToken().getTag() == getLeafTag();
+
+            if (!empty || maybeEmpty ) {
                 Node node;
                 Token nextToken = nextTokenInstance.getToken();
                 boolean newNode = false;
 
                 // special case when root is the leaf
-                if (getLeafTag().isA(Tag.Kind.ROOT)){
+                if (getLeafTag().isA(Tag.Kind.ROOT)) {
                     node = root;
                 }
                 // special case when cursor is a leaf open block
-                else if (cursorNode.isA(Node.Kind.LEAF)  && cursorNode.getTag().isA(Tag.Kind.SIMPLE_BLOCK)){
+                else if (cursorNode.isA(Node.Kind.LEAF) && cursorNode.getTag().isA(Tag.Kind.SIMPLE_BLOCK)) {
                     node = cursorNode;
                 }
                 // normal case when (1) root is not the leaf and (2) there's no open block as leaf
-               else {
+                else {
                     node = new Node();
                     newNode = true;
 
-                    // special case when (1) the leaf is a block and (2) next token is not close
-                    if (getLeafTag().isA(Tag.Kind.SIMPLE_BLOCK) && !nextToken.isA(Token.Kind.SIMPLE_BLOCK_CLOSE)){
+                    // special case when
+                    // (1) the leaf is a block and
+                    // (2) the next token is not the close token associated with the leaf tag
+                    if (getLeafTag().isA(Tag.Kind.SIMPLE_BLOCK) &&
+                            !(nextToken.isA(Token.Kind.SIMPLE_BLOCK_CLOSE) && nextToken.getTag() == getLeafTag())) {
                         node.setTag(getLeafTag().getBlockExt());
                     }
                     // normal case
-                   else{
+                    else {
                         node.setTag(getLeafTag());
                     }
 
@@ -222,7 +224,7 @@ public class NodeBuilder {
                 node.setContent(text.substring(startPosition, endPosition));
                 node.setClose(nextTokenInstance);
 
-                if (newNode){
+                if (newNode) {
                     addNode(node);
                 }
 
@@ -237,13 +239,19 @@ public class NodeBuilder {
         protected void closeNodeAssociatedWithToken() {
             Tag tokenTag = nextTokenInstance.getToken().getTag();
 
-            while (cursorNode.getTag().getIndex() != tokenTag.getIndex()) {
+            // close only if there's any open node below the token's tag
+            if (tokenTag.getIndex() <= cursorNode.getTag().getIndex()) {
+
+                // close nodes below the token's tag
+                while (cursorNode.getTag().getIndex() != tokenTag.getIndex()) {
+                    cursorNode.setClose(nextTokenInstance);
+                    cursorNode = cursorNode.getParent();
+                }
+
+                // close node associated with the token's tag
                 cursorNode.setClose(nextTokenInstance);
                 cursorNode = cursorNode.getParent();
             }
-
-            cursorNode.setClose(nextTokenInstance);
-            cursorNode = cursorNode.getParent();
         }
 
         /**
@@ -273,7 +281,7 @@ public class NodeBuilder {
             // if the node cursor's tag is the same or the parent then add directly
             if (node.getTag() == cursorNode.getTag()) {
                 // normal case when root is not leaf
-                if (node.getTag().getKind() != Tag.Kind.ROOT){
+                if (node.getTag().getKind() != Tag.Kind.ROOT) {
                     cursorNode.getParent().addChild(node);
                 }
             } else if (node.getTag().getParent() == cursorNode.getTag()) {
@@ -286,7 +294,7 @@ public class NodeBuilder {
                     parentNode = new Node();
                     parentNode.setTag(childNode.getTag().getParent());
                     parentNode.setKind(Node.Kind.BRANCH);
-                    parentNode.setOpen(nextTokenInstance);
+                    parentNode.setOpen(node.getOpen());
                     parentNode.addChild(childNode);
                     childNode = parentNode;
                 }

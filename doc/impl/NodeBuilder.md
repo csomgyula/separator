@@ -120,7 +120,7 @@ Utils
 
 ### New content node ###
 
-Adds a new content node.
+Creates a new content node and adds it to the cursor.
 
 *triggered by*: each token
 
