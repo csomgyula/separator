@@ -4,119 +4,176 @@
 status: working draft  
 date: 2013-01-04
 
+
 Main flow
 ---------
 
-1. read the next token from tokenizer
-2. handle next token
+1. create root node
+2. execute the main loop:
+    1. read the next token from tokenizer
+    2. handle next token
 
 The rest of this doc deals with the last step, ie. how `NodeBuilder` handles the next token.
+
 
 States
 ------
 
 ### Cursor ###
 
-Node builder maintains a "cursor" to the open nodes, it points to the deepest open node. Then you can move up in the cursor, through `Node.getParent()`.
+Node builder maintains a "cursor" to the list of open nodes, it points to the deepest open node: 
 
-### Cursor invariants ###
+     @ROOT
+       node
+         node
+           ...  
+             node <- cursor points here
 
-* Cursor points to the deepest not yet closed node
+NodeBuilder can navigate within the cursor upwards, through `Node.getParent()`.
+ 
+### Invariants ###
+
+`NodeBuilder` provides the following invariants:
+
+* After each round cursor points to the deepest node not yet closed
 * The cursor of a running builder always has at least one open block, ie. root
+
+
+Inputs
+------
 
 ### Possible inputs ###
 
 Input is a token associated with a 
 
-1. normal separator
-    1. simple separator  
-    2. block open
-2. block close
+1. simple separator** or
+2. block open (not SOS) or 
+3. block close (can be EOS)
 
-### Input invariants ###
+*Note*: SOS and EOS is associated with the root node. SOS is the Start-of-Source, EOS is the End-of-Source.
 
-* If there's an open block, then incoming normal separators must be lower in hierarchy
-* The block close must be associated with the lowest open block
+### Invariants ###
 
-### Possible inputs (2) ###
+`Tokenizer` provides the following invariants:
 
-Since the cursor of a running builder always has open block(s) the next token could be a
+* If there's an open block, then incoming normal separators are lower in hierarchy
+* An incoming block close is always associated with the lowest open block
+
+Since the cursor of a running builder always has open block(s) we can refine what an input token can be. The next token of a running builder could be a
 
 * normal token below open blocks 
-    * simple separator or
-    * open block (not SOS)
+    * either a simple separator or
+    * an open block (not SOS)
 * close token of the deepest open block
-    * block close token under root or
+    * either a block close under root or
     * EOS
 
 
 Handles
 -------
 
-### Handle invariants ###
+### Initial state ###
 
-* content nodes are always added as leaves
+Create the root node on the first round.
+
+*TODO*: Currently it is implemented at `NodeBuilder`. However perhaps some logic could be delegated to `Tokenizer`: it might emit a SOS on its first invocation.
+
+### Next token ###
+
+1. depending on the token kind execute
+2. simple separator or
+3. simple block open or
+4. simple block close
 
 ### Simple separator ###
 
-if input token is a simple separator:
+If next token is a simple separator then do the following:
 
-* new nodes are added as leaves, their tag is always the lowest in hiearchy that is independent from the tag of the token
-    * if the node cursor is higher in the hierarchy (grandpa or higher) create the necessary parent nodes of the new node
-        * for blocks create an external node (block-external) 
-* if the token is
-    * **INVALID** since root is a block token: the root tag then close nodes below it by moving the cursor to the root
-    * the leaf tag then move the cursor to the new node's parent
-    * is not the leaf tag then close the node associated with the token and the nodes below it by moving the cursor to its parent
+1. add a new content node (as leaf)
+2. close the node associated with the input token and nodes below it
 
 ### Simple block open ###
-if input token is a simple block open:
 
-* If there's content add a new leaf node to it, create its parents if necessary (just as with simple separators above), then close nodes associated with or below this tag
-* Open block, possibly build its parents (just as with simple separators)
+If next token is a simple block open (not SOS):
 
+1. if there's content add a new content node (as leaf)
+2. close the node associated with the input token and nodes below it
+3. open the block associated with the block open
 
 ### Simple block close ###
 
-* Add content as a new leaf node to the block, create the new node's parents if necessary (just as with simple separators above)
-* Close the block (and everything below it) by moving to its parent
+If next token is a simple block close (can be EOS):
 
-### EOS ###
+1. add a new content node (as leaf)
+2. close the node associated with the input token and nodes below it
 
-Sames as simple block close.
 
+### Invariants ###
+
+`NodeBuilder` provides the following invariants:
+
+* Content nodes are always added as leaves
+* Node associated with the incoming token's tag is always closed just as nodes below it
 
 Utils
 -----
 
-### content node ###
+### New content node ###
 
-triggered by: each token
+Adds a new content node.
 
-logic:
+*triggered by*: each token
 
-* create content node
-* add content node
-* possibly create its parents up till the deepest open node
-* for blocks create an external node (block-external) 
+*logic*:
 
-### close block ###
+1. create content node according the previous and the current token
+2. add content node to the cursor
 
-triggered by: each token, especially the block open will trigger it when content node added
+### Close node ###
 
-logic:
+Closes the token associated with the input token and everything below it.
 
-* close the open block associated with the token and everything below it
+*triggered by*: each token, especially the block open will trigger it when content node added
 
-### open block ###
+*logic*:
 
-triggered by: block open
+* close the open block associated with the token's tag and everything below it
 
-logic:
+### Open block node ###
 
-* create block node
-* possibly create its parents up till the deepest open node
-* for blocks create an external node (block-external) 
+Open a simple block (not SOS).
+
+*triggered by*: simple block open
+
+*logic*:
+
+1. create block node
+2. add block node
+
+### Add node ###
+
+Addition of both content node and open block node behaves similalry:
+
+1. possibly create its parents up till the deepest open node
+2. for blocks create an external node (block-external) 
+
+Summary
+-------
+
+`NodeBuilder` could be thought as a finite automata, where:
+
+*States*:
+
+* the state is the node cursor (ie. a linked list of nodes)
+
+*State changes*:
+
+* the cursor changes on the next token
+
+*Special states*:
+
+* initial state is `{root}`, ie. only the root is in the cursor
+* last state is empty cursor `{}`
 
 Sample
 ------
