@@ -264,7 +264,7 @@ public class NodeBuilder {
             node.setTag(nextTokenInstance.getToken().getTag());
 
             // node kind depends on whether the block is a leaf or not
-            Node.Kind nodeKind = nextTokenInstance.getToken().getTag() != leafTag ? Node.Kind.BRANCH : Node.Kind.LEAF;
+            Node.Kind nodeKind = nextTokenInstance.getToken().getTag() != getLeafTag() ? Node.Kind.BRANCH : Node.Kind.LEAF;
             node.setKind(nodeKind);
 
             node.setOpen(nextTokenInstance);
