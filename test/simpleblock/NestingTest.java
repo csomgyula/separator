@@ -1,4 +1,4 @@
-package separator.sample.simpleblock;
+package separator.test.simpleblock;
 
 import separator.Node;
 import separator.Separator;
@@ -7,7 +7,7 @@ import separator.sample.NodeToString;
 /**
  * Demonstrates nesting
  */
-public class Nesting {
+public class NestingTest {
     public static void main(String[] args){
         // rules
         String rules = "[block] \\{ \\} line \n [var]const \\(\\( \\)\\)";
@@ -32,7 +32,7 @@ public class Nesting {
 
         String block5 = "{\n}";
 
-        String text = block4;// block1 + block2 + block3 + block4 + block5;
+        String text = block1; // block1 + block2 + block3 + block4 + block5;
 
         // separate
         Separator separator = new Separator();
