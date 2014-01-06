@@ -1,6 +1,6 @@
 package separator.test.data;
 
-import separator.Tag2;
+import separator.Tag;
 
 /**
  * Simple tokenizer test
@@ -14,9 +14,9 @@ public class RootTestData extends AbstractTestData {
 
     @Override
     protected void buildTags() {
-        Tag2 root = new Tag2();
+        Tag root = new Tag();
         root.setName("root");
-        root.setKind(Tag2.Kind.ROOT);
+        root.setKind(Tag.Kind.ROOT);
         root.setIndex(0);
         getTags().add(root);
     }

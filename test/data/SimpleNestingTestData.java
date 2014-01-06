@@ -1,6 +1,6 @@
 package separator.test.data;
 
-import separator.Tag2;
+import separator.Tag;
 
 import java.util.regex.Pattern;
 
@@ -15,11 +15,11 @@ public class SimpleNestingTestData extends AbstractTestData {
 
     @Override
     protected void buildTags() {
-        Tag2 tag;
+        Tag tag;
 
-        tag = new Tag2();
+        tag = new Tag();
         tag.setName("part");
-        tag.setKind(Tag2.Kind.SIMPLE);
+        tag.setKind(Tag.Kind.SIMPLE);
         tag.setClose(Pattern.compile(" +"));
 
         tag.setParent(getTags().get(getTags().size() - 1));

@@ -1,6 +1,6 @@
 package separator.test.data;
 
-import separator.Tag2;
+import separator.Tag;
 
 import java.util.regex.Pattern;
 
@@ -15,28 +15,28 @@ public class SimpleBlockNestingTestData extends AbstractTestData {
 
     @Override
     protected void buildTags() {
-        Tag2 tag;
+        Tag tag;
 
-        tag = new Tag2();
+        tag = new Tag();
         tag.setName("block");
-        tag.setKind(Tag2.Kind.SIMPLE_BLOCK);
+        tag.setKind(Tag.Kind.SIMPLE_BLOCK);
         tag.setOpen(  Pattern.compile("\\{") );
         tag.setClose( Pattern.compile("\\}") );
         tag.setParent(getTags().get(getTags().size() - 1));
         tag.setIndex(getTags().size());
         getTags().add(tag);
 
-        tag = new Tag2();
+        tag = new Tag();
         tag.setName("expr");
-        tag.setKind(Tag2.Kind.SIMPLE);
+        tag.setKind(Tag.Kind.SIMPLE);
         tag.setClose(Pattern.compile(";"));
         tag.setParent(getTags().get(getTags().size() - 1));
         tag.setIndex(getTags().size());
         getTags().add(tag);
 
-        tag = new Tag2();
+        tag = new Tag();
         tag.setName("paren");
-        tag.setKind(Tag2.Kind.SIMPLE_BLOCK);
+        tag.setKind(Tag.Kind.SIMPLE_BLOCK);
         tag.setOpen(  Pattern.compile("\\(") );
         tag.setClose( Pattern.compile("\\)") );
         tag.setParent(getTags().get(getTags().size() - 1));

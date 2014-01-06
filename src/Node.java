@@ -5,7 +5,7 @@ import java.util.List;
 
 /**
  * Represents a node within the tagged tree that is the output of separation.
- *
+ * <p/>
  * TODO: add source refs to nodes: open/close token, start/end index
  */
 public class Node {
@@ -14,14 +14,8 @@ public class Node {
     private Node parent;
     private String content;
     private List<Node> children;
-    private Token.Instance open, close;
+    private Token open, close;
 
-    public static Node root(){
-        Node node = new Node();
-        node.setKind(Kind.ROOT);
-        node.setTag(Tag.root());
-        return node;
-    }
 
     public Tag getTag() {
         return tag;
@@ -48,13 +42,13 @@ public class Node {
     }
 
     public List<Node> getChildren() {
-        if (children==null){
+        if (children == null) {
             children = new ArrayList<Node>();
         }
         return children;
     }
 
-    public void addChild(Node node){
+    public void addChild(Node node) {
         getChildren().add(node);
         node.setParent(this);
     }
@@ -70,36 +64,35 @@ public class Node {
     /**
      * Returns the token at the start of the node.
      */
-    public Token.Instance getOpen() {
+    public Token getOpen() {
         return open;
     }
 
-    public void setOpen(Token.Instance open) {
+    public void setOpen(Token open) {
         this.open = open;
     }
 
     /**
      * Returns the token at the end of the node.
      */
-    public Token.Instance getClose() {
+    public Token getClose() {
         return close;
     }
 
-    public void setClose(Token.Instance close) {
+    public void setClose(Token close) {
         this.close = close;
     }
 
     /**
      * Returns the text position at the start of the node (inclusive).
-     *
+     * <p/>
      * That is this node represents substring(startPosition, endPosition).
      */
-    public int getStartPosition(){
-        Token.Instance open = getOpen();
-        if (open != null){
-            return open.getEndPosition();
-        }
-        else{
+    public int getStartPosition() {
+        Token open = getOpen();
+        if (open != null) {
+            return open.getEnd();
+        } else {
             return -1;
         }
     }
@@ -107,27 +100,86 @@ public class Node {
     /**
      * Returns the text position at the end of the node (exclusive).
      */
-    public int getEndPosition(){
-        Token.Instance close = getClose();
-        if (close != null){
-            return close.getStartPosition();
-        }
-        else{
+    public int getEndPosition() {
+        Token close = getClose();
+        if (close != null) {
+            return close.getStart();
+        } else {
             return -1;
         }
     }
 
-    public boolean isA(String tag){
+    public boolean isA(String tag) {
         return getTag().getName().equals(tag);
     }
 
-    public boolean isA(Kind kind){
+    public boolean isA(Kind kind) {
         return getKind() == kind;
     }
 
-    public enum Kind{
+    public enum Kind {
         ROOT,
         BRANCH,
         LEAF
+    }
+
+    public String toString() {
+        StringBuilder stringBuilder = new StringBuilder();
+        toString(0, this, stringBuilder, 0);
+        return stringBuilder.toString();
+    }
+
+    protected void toString(int index, Node node, StringBuilder stringBuilder, int ident) {
+        // ident
+        for (int i = 0; i < ident; i++) {
+            stringBuilder.append("  ");
+        }
+
+        // source position
+        stringBuilder.append("@(");
+        stringBuilder.append(node.getStartPosition());
+        stringBuilder.append(",");
+        stringBuilder.append(node.getEndPosition());
+        stringBuilder.append(") ");
+
+        // tag name and index
+        if (node.getTag() != null) {
+            stringBuilder.append(node.getTag().getName());
+            // string.append("@");
+            // string.append(node.getKind());
+            if (node.getTag().getKind() != Tag.Kind.ROOT) {
+                stringBuilder.append("(");
+                stringBuilder.append(index);
+                stringBuilder.append(")");
+            }
+        }
+        else{
+            stringBuilder.append("untagged");
+        }
+        stringBuilder.append(": ");
+
+        // content
+        if (node.getContent() != null) {
+            stringBuilder.append(node.getContent());
+        }
+
+        // head-body separator
+        stringBuilder.append("\n");
+
+        // children
+        index = 0;
+        for (Node child : node.getChildren()) {
+            // defensive coding
+            if( child != node ){
+                toString(index++, child, stringBuilder, ident + 1);
+            }
+            // should not happen but...
+            else{
+                for (int i = 0; i < ident+2; i++) {
+                    stringBuilder.append("  ");
+                }
+                stringBuilder.append("this (infinite cycle)");
+            }
+        }
     }
 }

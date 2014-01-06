@@ -1,10 +1,6 @@
 package separator.sample.simple;
 
-import separator.Node;
 import separator.Separator;
-
-import java.lang.String;
-import java.lang.System;
 
 /**
  * Separators xan be nested
@@ -21,12 +17,8 @@ public class Csv {
 
         String csv = line0 + line1 + line2 + line3 + line4;
 
-        Separator separator = new Separator();
+        Separator separator = new Separator(rules);
 
-        Node node = separator.separate(rules, csv);
-
-        System.out.println("Number of records: " + node.getChildren().size());
-        separator.sample.NodeToString nodeToString = new separator.sample.NodeToString();
-        System.out.println(nodeToString.toString(node));
+        System.out.println(separator.separate(csv));
     }
 }

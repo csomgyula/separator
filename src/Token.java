@@ -1,14 +1,17 @@
 package separator;
 
-import java.util.regex.Pattern;
-
 /**
- * Represents a separator token.
+ * Represents a separator instance.
  */
 public class Token {
     private Tag tag;
-    private Pattern pattern;
+    private int start, end;
     private Kind kind;
+    private SpecialKind specialKind;
+
+    public Token(){
+        specialKind = SpecialKind.NOT_SPECIAL;
+    }
 
     public Tag getTag() {
         return tag;
@@ -18,12 +21,20 @@ public class Token {
         this.tag = tag;
     }
 
-    public Pattern getPattern() {
-        return pattern;
+    public int getStart() {
+        return start;
     }
 
-    public void setPattern(Pattern pattern) {
-        this.pattern = pattern;
+    public void setStart(int start) {
+        this.start = start;
+    }
+
+    public int getEnd() {
+        return end;
+    }
+
+    public void setEnd(int end) {
+        this.end = end;
     }
 
     public Kind getKind() {
@@ -34,86 +45,70 @@ public class Token {
         this.kind = kind;
     }
 
+    public SpecialKind getSpecialKind() {
+        return specialKind;
+    }
+
+    public void setSpecialKind(SpecialKind specialKind) {
+        this.specialKind = specialKind;
+    }
+
+    public boolean isSpecial(){
+        return specialKind != SpecialKind.NOT_SPECIAL;
+    }
+
+    public boolean isOpen(){
+        return getKind() == Kind.OPEN;
+    }
+
+    public boolean isClose(){
+        return getKind() == Kind.CLOSE;
+    }
+
+    public boolean isNotSpecial(){
+        return getSpecialKind() == SpecialKind.NOT_SPECIAL;
+    }
+
+    public boolean isSOS(){
+        return getSpecialKind() == SpecialKind.SOS;
+    }
+
+    public boolean isEOS(){
+        return getSpecialKind() == SpecialKind.EOS;
+    }
+
     public boolean isA(Kind kind){
         return getKind() == kind;
     }
 
-    /**
-     * Token types
-     */
-    public enum Kind {
-        SIMPLE,
-        SIMPLE_BLOCK_OPEN, SIMPLE_BLOCK_CLOSE,
-        // RECURSIVE_BLOCK_OPEN, RECURSIVE_BLOCK_CLOSE,
-        // SKIP_OPEN, SKIP_ESCAPE, SKIP_CLOSE,
-        // ESCAPE_OPEN, ESCAPE_ESCAPE, ESCAPE_CLOSE,
-        // END,
-        SOS, EOS;
+    protected enum Kind{
+        OPEN, CLOSE;
     }
 
-
-    /**
-     * Represents a pair of tokens associated with a block.
-     */
-    public static class Pair {
-        private Tag tag;
-        private Token open, close;
-
-        public Tag getTag() {
-            return tag;
-        }
-
-        public void setTag(Tag tag) {
-            this.tag = tag;
-        }
-
-        public Token getOpen() {
-            return open;
-        }
-
-        public void setOpen(Token open) {
-            this.open = open;
-        }
-
-        public Token getClose() {
-            return close;
-        }
-
-        public void setClose(Token close) {
-            this.close = close;
-        }
+    protected enum SpecialKind{
+        SOS, EOS, NOT_SPECIAL;
     }
 
-    /**
-     * Represents a separator token found in the input string.
-     * An instance has start position (inclusive) and end position (exclusive).
-     */
-    public static class Instance {
-        private Token token;
-        private int startPosition, endPosition;
+    public String toString(){
+        StringBuilder stringBuilder = new StringBuilder();
 
-        public Token getToken() {
-            return token;
+        // tag
+        stringBuilder.append(getTag().getName());
+
+        // kind
+        stringBuilder.append(" : ");
+        stringBuilder.append(getKind());
+        if (isSpecial()){
+            stringBuilder.append("/");
+            stringBuilder.append(getSpecialKind());
         }
 
-        public void setToken(Token token) {
-            this.token = token;
-        }
+        // pos
+        stringBuilder.append(" @");
+        stringBuilder.append(getStart());
+        stringBuilder.append(",");
+        stringBuilder.append(getEnd());
 
-        public int getStartPosition() {
-            return startPosition;
-        }
-
-        public void setStartPosition(int startPosition) {
-            this.startPosition = startPosition;
-        }
-
-        public int getEndPosition() {
-            return endPosition;
-        }
-
-        public void setEndPosition(int endPosition) {
-            this.endPosition = endPosition;
-        }
+        return stringBuilder.toString();
     }
 }

@@ -1,8 +1,5 @@
 package separator;
 
-import separator.Tag2;
-import separator.Token2;
-
 import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.List;
@@ -12,11 +9,11 @@ import java.util.regex.Pattern;
 /**
  * Tokenizer.
  */
-public class Tokenizer2 {
+public class Tokenizer {
     // -- config
     private int textLength;
 
-    public Tokenizer2(List<Tag2> tags, String text) {
+    public Tokenizer(List<Tag> tags, String text) {
         textLength = text.length();
         textPosition = -1;
         tagHierarchyMatcher = new TagHierarchyMatcher(tags, text);
@@ -32,9 +29,9 @@ public class Tokenizer2 {
      * Returns the next token if any. Especially first it returns the special Start-of-Source (SOS) token and last it
      * returns the special End-of-Source (EOS) token.
      */
-    public Token2 next() {
+    public Token next() {
         if (tagHierarchyMatcher.find(textPosition)) {
-            Token2 token = tagHierarchyMatcher.getToken();
+            Token token = tagHierarchyMatcher.getToken();
             textPosition = token.getEnd();
             return token;
         } else {
@@ -50,11 +47,11 @@ public class Tokenizer2 {
         private TagMatcher[] tagMatchers;
         private int textLength;
 
-        public TagHierarchyMatcher(List<Tag2> tags, String text) {
+        public TagHierarchyMatcher(List<Tag> tags, String text) {
             // init tag matchers
             tagMatchers = new TagMatcher[tags.size()];
             int index = 0;
-            for (Tag2 tag : tags) {
+            for (Tag tag : tags) {
                 tagMatchers[index++] = new TagMatcher(tag, text);
             }
             openMatchers = new ArrayDeque<TagMatcher>();
@@ -63,7 +60,7 @@ public class Tokenizer2 {
 
         // -- states
         private Deque<TagMatcher> openMatchers;
-        private Token2 token;
+        private Token token;
 
         protected TagMatcher getDeepestOpenMatcher() {
             return openMatchers.peek();
@@ -141,7 +138,7 @@ public class Tokenizer2 {
         /**
          * Returns the match associated with the previous find.
          */
-        public Token2 getToken() {
+        public Token getToken() {
             return token;
         }
     }
@@ -151,20 +148,20 @@ public class Tokenizer2 {
      */
     protected static class TagMatcher {
         // -- config
-        private Tag2 tag;
+        private Tag tag;
         private Matcher open, close;
         private int textLength;
 
-        public TagMatcher(Tag2 tag, String text) {
+        public TagMatcher(Tag tag, String text) {
             this.tag = tag;
 
             open = buildMatcher(tag.getOpen(), text);
             close = buildMatcher(tag.getClose(), text);
 
-            if (tag.isA(Tag2.Kind.SIMPLE)) {
-                tokenKind = Token2.Kind.CLOSE;
+            if (tag.isA(Tag.Kind.SIMPLE)) {
+                tokenKind = Token.Kind.CLOSE;
             } else {
-                tokenKind = Token2.Kind.OPEN;
+                tokenKind = Token.Kind.OPEN;
             }
 
             textLength = text.length();
@@ -177,13 +174,13 @@ public class Tokenizer2 {
         /**
          * Returns the tag associated with the matcher.
          */
-        public Tag2 getTag() {
+        public Tag getTag() {
             return tag;
         }
 
         // -- state
-        private Token2.Kind tokenKind;
-        private Token2 token;
+        private Token.Kind tokenKind;
+        private Token token;
 
         /**
          * Returns the matcher associated with the current kind.
@@ -212,17 +209,17 @@ public class Tokenizer2 {
             // normal text pos
             if (0 <= pos && pos < textLength) {
                 if (matcher != null && matcher.find(pos)) {
-                    token = new Token2();
+                    token = new Token();
                     token.setTag(tag);
                     token.setKind(tokenKind); // no need to set special kind since it defaults to not special
                     token.setStart(matcher.start());
                     token.setEnd(matcher.end());
                     return true;
                 } else if (getTag().isRoot()) {   // FIXME: avoid DRY
-                    token = new Token2();
+                    token = new Token();
                     token.setTag(tag);
                     token.setKind(tokenKind);
-                    token.setSpecialKind(Token2.SpecialKind.EOS);
+                    token.setSpecialKind(Token.SpecialKind.EOS);
                     token.setStart(textLength);
                     token.setEnd(textLength + 1);
                     return true;
@@ -233,10 +230,10 @@ public class Tokenizer2 {
             }
             // special text pos (SOS, EOS)
             else if (getTag().isRoot() && (pos == -1 || pos == textLength)) { // FIXME: make it faster
-                token = new Token2();
+                token = new Token();
                 token.setTag(tag);
                 token.setKind(tokenKind);
-                token.setSpecialKind(pos == -1 ? Token2.SpecialKind.SOS : Token2.SpecialKind.EOS);
+                token.setSpecialKind(pos == -1 ? Token.SpecialKind.SOS : Token.SpecialKind.EOS);
                 token.setStart(pos);
                 token.setEnd(pos + 1);
                 return true;
@@ -253,10 +250,10 @@ public class Tokenizer2 {
             if (tag.isBlock()) {
                 switch (tokenKind) {
                     case OPEN:
-                        tokenKind = Token2.Kind.CLOSE;
+                        tokenKind = Token.Kind.CLOSE;
                         break;
                     case CLOSE:
-                        tokenKind = Token2.Kind.OPEN;
+                        tokenKind = Token.Kind.OPEN;
                         break;
                 }
             }
@@ -267,7 +264,7 @@ public class Tokenizer2 {
         /**
          * Returns the match associated with the previous find.
          */
-        public Token2 getToken() {
+        public Token getToken() {
             return token;
         }
 
@@ -275,7 +272,7 @@ public class Tokenizer2 {
          * Returns true if it is a block and state is open, ie. the current token kind is close.
          */
         public boolean isOpen() {
-            return tag.isBlock() && tokenKind == Token2.Kind.CLOSE;
+            return tag.isBlock() && tokenKind == Token.Kind.CLOSE;
         }
     }
 }

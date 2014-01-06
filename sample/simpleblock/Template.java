@@ -2,7 +2,6 @@ package separator.sample.simpleblock;
 
 import separator.Node;
 import separator.Separator;
-import separator.sample.NodeToString;
 
 import java.util.List;
 import java.util.Hashtable;
@@ -12,7 +11,6 @@ import java.util.Hashtable;
  */
 public class Template {
     private Separator separator;
-    private String rules;
 
     public static void main(String[] args){
         Template template = new Template();
@@ -22,8 +20,7 @@ public class Template {
         String templateText = "Hello {{name}}!";
         System.out.println("template: " + templateText);
         Node root = template.parse(templateText);
-        NodeToString nodeToString = new NodeToString();
-        System.out.println(nodeToString.toString(root));
+        System.out.print("tree: " + root);
 
         // build vars
         Hashtable<String, String> vars = new Hashtable<String, String>();
@@ -31,16 +28,15 @@ public class Template {
         vars.put("name", name);
 
         // generate text
-        System.out.println(template.generate(root.getChildren(), vars));
+        System.out.println("generated text: " + template.generate(root.getChildren(), vars));
     }
 
     public Template(){
-        separator = new Separator();
+        separator = new Separator("[var]const \\{\\{ \\}\\}");
         // TODO: simple patterns should be handled as strings instead of regexps. For instance the ability to use "{{" instead  of "\\{\\{"
-        rules = "[var]const \\{\\{ \\}\\}";
     }
     public Node parse(String text){
-        return separator.separate(rules, text);
+        return separator.separate(text);
     }
 
     public String generate(List<Node> nodes, Hashtable<String, String> vars){
@@ -62,6 +58,6 @@ public class Template {
     }
 
     public String getRules() {
-        return rules;
+        return separator.getRules();
     }
 }

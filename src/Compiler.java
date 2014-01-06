@@ -1,7 +1,4 @@
-package separator.parser;
-
-import separator.Tag;
-import separator.Token;
+package separator;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -12,8 +9,6 @@ import java.util.regex.Pattern;
  * Represents the DSL compiler.
  *
  * TODO: simple patterns should be handled as strings instead of regexps. For instance the ability to use "{{" instead  of "\\{\\{"
- *
- * FIXME: handle parity error in block defs
  */
 public class Compiler {
 
@@ -24,9 +19,7 @@ public class Compiler {
     public List<Tag> compile(String rules){
         // states
         List<Tag> tags;
-        Tag nextTag, previousTag;
-        Token.Pair nextTokenPair;
-        int parity = 0;
+        Tag nextTag, prevTag;
         Tag blockExtTag;
         String tagName, blockExtName;
 
@@ -34,9 +27,11 @@ public class Compiler {
         tags = new ArrayList<Tag>();
 
         // add root tag
-        nextTag = Tag.root();
+        nextTag = new Tag();
+        nextTag.setKind(Tag.Kind.ROOT);
+        nextTag.setIndex(0); // highest in hierarchy
         tags.add(nextTag);
-        previousTag = nextTag;
+        prevTag = nextTag;
 
         // build tag list according to the rules
         String[] rulesParts = rules.split(" +");
@@ -44,6 +39,7 @@ public class Compiler {
         Pattern simple = Pattern.compile("[a-zA-Z]+");
         Pattern simpleBlock = Pattern.compile("\\[([a-zA-Z]+)\\]([a-zA-Z]+)?");
         Matcher simpleMatcher, simpleBlockMatcher;
+        int blockTokenParity = 0;
 
         for (String rulesPart : rulesParts){
             simpleMatcher = simple.matcher(rulesPart);
@@ -53,13 +49,13 @@ public class Compiler {
             if ( simpleMatcher.matches() ){
                 nextTag = new Tag();
                 nextTag.setName(rulesPart);
-                nextTag.setIndex(previousTag.getIndex() + 1);
+                nextTag.setIndex(prevTag.getIndex() + 1);
                 nextTag.setKind(Tag.Kind.SIMPLE);
-                nextTag.setParent(previousTag);
+                nextTag.setParent(prevTag);
                 tags.add(nextTag);
-                previousTag = nextTag;
+                prevTag = nextTag;
             }
-            // simple block
+            // simple block:
             else if (simpleBlockMatcher.matches()){
                 tagName = simpleBlockMatcher.group(1);
                 blockExtName = simpleBlockMatcher.group(2);
@@ -67,50 +63,39 @@ public class Compiler {
                 // block tag
                 nextTag = new Tag();
                 nextTag.setName(tagName);
-                nextTag.setIndex(previousTag.getIndex() + 1);
+                nextTag.setIndex(prevTag.getIndex() + 1);
                 nextTag.setKind(Tag.Kind.SIMPLE_BLOCK);
-                nextTag.setParent(previousTag);
+                nextTag.setParent(prevTag);
                 tags.add(nextTag);
 
                 // block-ext
                 blockExtTag = new Tag();
-                blockExtTag.setName(blockExtName != null ? blockExtName : nextTag.getName()+"Ext");
+                blockExtTag.setName(blockExtName != null ? blockExtName : tagName+"Ext");
                 blockExtTag.setIndex(nextTag.getIndex());
                 blockExtTag.setKind(Tag.Kind.SIMPLE_BLOCK_EXT);
                 blockExtTag.setParent(nextTag.getParent());
                 nextTag.setBlockExt(blockExtTag);
 
-                previousTag = nextTag;
+                prevTag = nextTag;
             }
             // token
             else{
                 if (nextTag == null) throw new NullPointerException("token without tag: " + rulesPart);
+                Pattern pattern = Pattern.compile(rulesPart);
 
-                // general
-                nextToken = new Token();
-                nextToken.setPattern(Pattern.compile(rulesPart));
-                nextToken.setTag(nextTag);
-
-                // simple separator
+                // simple separator:
                 if (nextTag.isA(Tag.Kind.SIMPLE)){
-                    nextToken.setKind(Token.Kind.SIMPLE);
-                    nextTag.getTokens().add(nextToken);
+                    nextTag.setClose(pattern);
                 }
-                // simple block
+                // simple block:
                 else{
-                    if (parity == 0){
-                        nextToken.setKind(Token.Kind.SIMPLE_BLOCK_OPEN);
-                        previousToken = nextToken;
-                        parity = 1;
+                    if (blockTokenParity == 0){
+                        nextTag.setOpen(pattern);
+                        blockTokenParity = 1;
                     }
                     else{
-                        nextToken.setKind(Token.Kind.SIMPLE_BLOCK_CLOSE);
-                        nextTokenPair = new Token.Pair();
-                        nextTokenPair.setTag(nextTag);
-                        nextTokenPair.setOpen(previousToken);
-                        nextTokenPair.setClose(nextToken);
-                        nextTag.getTokenPairs().add(nextTokenPair);
-                        parity = 0;
+                        nextTag.setClose(pattern);
+                        blockTokenParity = 0;
                     }
                 }
             }

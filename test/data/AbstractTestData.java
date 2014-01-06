@@ -1,6 +1,6 @@
 package separator.test.data;
 
-import separator.Tag2;
+import separator.Tag;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -11,7 +11,7 @@ import java.util.List;
 public abstract class AbstractTestData {
 
     private AbstractTestData parent;
-    private List<Tag2> tags;
+    private List<Tag> tags;
     private List<String> texts;
     private String name;
 
@@ -28,9 +28,9 @@ public abstract class AbstractTestData {
 
     protected abstract void buildParent();
 
-    public List<Tag2> getTags() {
+    public List<Tag> getTags() {
         if (tags == null) {
-            tags = new ArrayList<Tag2>();
+            tags = new ArrayList<Tag>();
             if (getParent() != null) {
                 tags.addAll(getParent().getTags());
             }

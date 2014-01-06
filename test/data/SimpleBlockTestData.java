@@ -1,6 +1,6 @@
 package separator.test.data;
 
-import separator.Tag2;
+import separator.Tag;
 
 import java.util.regex.Pattern;
 
@@ -15,11 +15,11 @@ public class SimpleBlockTestData extends AbstractTestData {
 
     @Override
     protected void buildTags() {
-        Tag2 tag;
+        Tag tag;
 
-        tag = new Tag2();
+        tag = new Tag();
         tag.setName("block");
-        tag.setKind(Tag2.Kind.SIMPLE_BLOCK);
+        tag.setKind(Tag.Kind.SIMPLE_BLOCK);
         tag.setOpen(  Pattern.compile("\\{") );
         tag.setClose( Pattern.compile("\\}") );
 
