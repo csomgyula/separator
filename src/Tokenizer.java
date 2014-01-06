@@ -113,10 +113,10 @@ public class Tokenizer {
                     throwNotEnclosedException(openToken, bestToken);
                 }
 
-                // notify the matcher - this must be invoked before close / openMatcher
+                // notify the matcher - this must be invoked before the close / open tag block!
                 bestMatcher.matched();
 
-                // close / openMatcher tag if necessary
+                // close / open tag if necessary
                 if (bestMatcher == deepestOpenMatcher && !bestMatcher.isOpen()) {
                     closeDeepestOpenMatcher();
                 } else if (bestMatcher.isOpen()) {
