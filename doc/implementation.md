@@ -1,7 +1,7 @@
 Separator implementation
 =========
 status: working draft  
-date: 2013-01-01
+date: 2013-01-06
 
 
 Roadmap
@@ -10,12 +10,10 @@ Roadmap
 Prototype:
 
 * simple separator + nesting - DONE
+* simple block + nesting - DONE
 * recursive block
-* escape separator
-* end separator
-* empty separator
+* escape
 * trim
-* simple block
 * skip
 
 Beta and RFE:
@@ -27,25 +25,22 @@ Beta and RFE:
 * output
     * more sophisticated navigation
     * (SAX-like) callbacks, maybe Java 8 functors
-    * typesafe builders for primitive types (int, date) and objects
 * DSL
+    * concatenation operator
+    * siwtch operator
     * DSL dialects
     * rules by examples
 
-Public API
+API
 --
-
-The prototype API consists of two main classes: `Separator` and `Node`:
-
-* `Separator` is the main class that exposes the separator interface
-* `Node` represents a node in the tagged tree that is the output of separation
 
 ### Separator ###
 
 `Separator` can separate the given text according to the given rules. Has one method: `separate`:
 
- * `Node separate(String rules, String text)` - parses the given text according to the given rules:
+* `Separator(String rules)` - initializes the Separator (compiles the rules)
     * separation `rules` must be given in the form of the [separator DSL](dsl.md)
+* `Node separate(String text)` - parses the given text according to the given rules:
     * `text` can be any string
     * on successfull parsing it returns the root node of the tagged tree (see below)
 
@@ -71,12 +66,9 @@ A node
 * may have content if it is a leaf node: `String getContent()`
 * may have child nodes if it is a root or branch node: `List<Node> getChildren()`
 
-Prototype implementation
---
+### Main flow ###
 
-### Core ###
-
-The prototype implementation builds upon a simple **pipeline architecture**:
+The prototype implementation builds upon a simple pipeline architecture:
 
     String =Char=> Tokenizer =Token=> NodeBuilder
 
@@ -84,20 +76,24 @@ The `Tokenizer` read characters from the input string and emit tokens to the `No
 
 *Note*: Technically it is the `NodeBuilder` who instantiates and reads the `Tokenizer`. Hence while builder has an active role, tokenizer has a passive role.
 
-Both `Tokenizer` and `NodeBuilder` relies upon **compiled rules**. It is the `Compiler` who creates this compiled form.
+Both `Tokenizer` and `NodeBuilder` relies upon compiled rules. It is the `Compiler` who creates this compiled form.
 
-### Flow ###
+---
 
-`Separator` delegates to `Parser` which in turn delegates to `Compiler` and `NodeBuilder`. The main flow is the following:
+The main flow is the following:
 
-1. The `Separator` object instantiates a new `Parser` instance. 
-    1. The parser in turn compiles the rules by invoking the `compile()` method of `Compiler`.
-2. The separator then invokes the `parse()` method of the parser. 
-    1. The parser instantiates and configures a new `NodeBuilder` then
-    2. passes control to the builder by invoking its `build()` method
-        1. The builder then builds the output tree according to the above pipeline architecture
-        2. and returns the root `Node`.
-    3. The parser returns the root as well.
-3. Finally the separator returns the root node as well.
+*init*:
+
+1. The `Separator` object compiles the given rules upon initialization by invoking the `compile()` method of the `Compiler`.
+
+*separate*:
+
+2. When `separate()` is called the `Separator` object instantiates a new `NodeBuilder` instance.
+    1. The builder instantiates a new `Tokenizer` instance.
+3. The separator then invokes the `build()` method of the builder. 
+    1. The builder loops until there's more token. The main loop is the following:
+        1. read the next token by invoking the `next()` method of the `Tokenizer`
+        2. build the next node according to the next token just read
+    2. If there's no more token return the root node.
 
 
