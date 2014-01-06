@@ -19,16 +19,14 @@ Prototype:
 Beta and RFE:
 
 * engineering
-    * error reporting
-    * maybe logging
+    * error reporting - DONE
     * machine friendliness (fast, memory efficient)
 * output
     * more sophisticated navigation
     * (SAX-like) callbacks, maybe Java 8 functors
 * DSL
     * concatenation operator
-    * siwtch operator
-    * DSL dialects
+    * switch operator
     * rules by examples
 
 API
