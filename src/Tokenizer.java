@@ -80,7 +80,7 @@ public class Tokenizer {
         public boolean find(int pos) {
             // init best matcher
             TagMatcher bestMatcher = null;
-            int bestStart = textLength, bestEnd = pos; // TODO: cache text.length()
+            int bestStart = textLength, bestEnd = pos;
 
             // init loop start
             int loopStart = 0;
@@ -91,7 +91,7 @@ public class Tokenizer {
             // loop through tags and select the best match
             TagMatcher matcher;
             int start, end;
-            for (int i = loopStart; i < tagMatchers.length; i++) { // TODO: cache length
+            for (int i = loopStart; i < tagMatchers.length; i++) {
                 matcher = tagMatchers[i];
                 if (matcher.find(pos)) {
                     start = matcher.getToken().getStart();
