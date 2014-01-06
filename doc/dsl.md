@@ -225,7 +225,8 @@ A trim trims the given patterns from the content (useful typically to exlude lea
 
 **TODO**
 
-syntax 
+
+Syntax 
 --
 
 separators are separated by spaces:
@@ -240,4 +241,11 @@ separator can be either a simple separator or a simple block:
 
     simpleBlock := "["tag"]"blockExt? openPattern closePattern
 
+where `tag`, `blockExt` is a word:  
+  
+    tag, blockExt := [a-zA-Z]+
+
+and `pattern`s are valid regexps but can not be words:
+
+    pattern, openPattern, closePattern := [^a-zA-Z]+
 
