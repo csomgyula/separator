@@ -228,7 +228,13 @@ A trim trims the given patterns from the content (useful typically to exlude lea
 syntax 
 --
 
-    separator := (simple | simpleBlock)*
+separators are separated by spaces:
+
+    separators = (separator (SPACE+ separator)*  SPACE*)?
+
+separator can be either a simple separator or a simple block:
+
+    separator := simple | simpleBlock 
 
     simple := tag pattern
 
