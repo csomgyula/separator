@@ -219,10 +219,6 @@ A skip does not just escape from normal parsing rules, its content is exluded fo
 
 **TODO**
 
-    #comment# // \n /* */
-    comment## // \n
-    skip comment: // \n
-
 ### trim ###
 
 A trim trims the given patterns from the content (useful typically to exlude leading/trailing white spaces).
