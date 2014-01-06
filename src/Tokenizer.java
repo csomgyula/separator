@@ -109,67 +109,9 @@ public class Tokenizer {
 
                 // validate that the deepest open block is not harmed
                 if (deepestOpenMatcher != null && deepestOpenMatcher.getTag().getIndex() > bestToken.getTag().getIndex()) {
-                    StringBuilder errorText = new StringBuilder();
                     Token openToken = deepestOpenMatcher.getOpenToken();
-
-                    // main text
-                    errorText.append("Missing enclosing separator");
-
-                    // source
-                    errorText.append(" @");
-                    errorText.append(openToken.getStart());
-                    errorText.append(",");
-                    errorText.append(openToken.getEnd());
-                    errorText.append(": ");
-
-                    // text at and before open token
-                    int errStart, errEnd;
-                    errStart = openToken.getStart()-10;
-                    errEnd = openToken.getStart();
-                    if (errStart < 0){
-                        errStart = 0;
-                    }
-                    if (errStart < errEnd){
-                        if (errStart>0) { errorText.append("..."); }
-                        errorText.append(text.substring(errStart, errEnd).replaceAll("\n", "\\\\n"));
-                    }
-                    errorText.append("^^^");
-                    errStart = openToken.getStart();
-                    errEnd = openToken.getEnd();
-                    errorText.append(text.substring(errStart, errEnd).replaceAll("\n", "\\\\n"));
-
-                    // text between open and best token
-                    errStart = bestToken.getStart() - 10;
-                    errEnd = openToken.getEnd() + 10;
-                    if (errEnd < errStart){
-                        errStart = openToken.getEnd();
-                        errorText.append(text.substring(errStart, errEnd).replaceAll("\n", "\\\\n"));
-                        errorText.append("...");
-                        errStart = bestToken.getStart() - 10;
-                        errEnd = bestToken.getStart();
-                        errorText.append(text.substring(errStart, errEnd).replaceAll("\n", "\\\\n"));
-                    }
-                    else{
-                        errStart = openToken.getEnd();
-                        errEnd = bestToken.getStart();
-                        errorText.append(text.substring(errStart, errEnd).replaceAll("\n", "\\\\n"));
-                    }
-
-                    // text at and after best token
-                    errorText.append("^^^");
-                    errStart = bestToken.getStart();
-                    errEnd = bestToken.getEnd()+10;
-                    if (errEnd>textLength){
-                        errEnd = textLength;
-                    }
-                    if (errStart < errEnd){
-                        errorText.append(text.substring(errStart, errEnd).replaceAll("\n", "\\\\n"));
-                        if (errEnd<textLength) { errorText.append("..."); }
-                    }
-
-                    throw new RuntimeException(errorText.toString());
+                    throwNotEnclosedException(openToken, bestToken);
                 }
-
 
                 // notify the matcher - this must be invoked before close / openMatcher
                 bestMatcher.matched();
@@ -198,6 +140,66 @@ public class Tokenizer {
             openMatchers.pop();
         }
 
+        protected void throwNotEnclosedException(Token openToken, Token bestToken){
+            StringBuilder errorText = new StringBuilder();
+
+            // main text
+            errorText.append("Missing enclosing separator");
+
+            // source
+            errorText.append(" @");
+            errorText.append(openToken.getStart());
+            errorText.append(",");
+            errorText.append(openToken.getEnd());
+            errorText.append(": ");
+
+            // text at and before open token
+            int errStart, errEnd;
+            errStart = openToken.getStart()-10;
+            errEnd = openToken.getStart();
+            if (errStart < 0){
+                errStart = 0;
+            }
+            if (errStart < errEnd){
+                if (errStart>0) { errorText.append("..."); }
+                errorText.append(text.substring(errStart, errEnd).replaceAll("\n", "\\\\n"));
+            }
+            errorText.append("^^^");
+            errStart = openToken.getStart();
+            errEnd = openToken.getEnd();
+            errorText.append(text.substring(errStart, errEnd).replaceAll("\n", "\\\\n"));
+
+            // text between open and best token
+            errStart = bestToken.getStart() - 10;
+            errEnd = openToken.getEnd() + 10;
+            if (errEnd < errStart){
+                errStart = openToken.getEnd();
+                errorText.append(text.substring(errStart, errEnd).replaceAll("\n", "\\\\n"));
+                errorText.append("...");
+                errStart = bestToken.getStart() - 10;
+                errEnd = bestToken.getStart();
+                errorText.append(text.substring(errStart, errEnd).replaceAll("\n", "\\\\n"));
+            }
+            else{
+                errStart = openToken.getEnd();
+                errEnd = bestToken.getStart();
+                errorText.append(text.substring(errStart, errEnd).replaceAll("\n", "\\\\n"));
+            }
+
+            // text at and after best token
+            errorText.append("^^^");
+            errStart = bestToken.getStart();
+            errEnd = bestToken.getEnd()+10;
+            if (errEnd>textLength){
+                errEnd = textLength;
+            }
+            if (errStart < errEnd){
+                errorText.append(text.substring(errStart, errEnd).replaceAll("\n", "\\\\n"));
+                if (errEnd<textLength) { errorText.append("..."); }
+            }
+
+            throw new RuntimeException(errorText.toString());
+        }
         // -- outputs
 
         /**
