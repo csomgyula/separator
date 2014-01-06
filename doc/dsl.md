@@ -245,7 +245,5 @@ where `tag`, `blockExt` is a word:
   
     tag, blockExt := [a-zA-Z]+
 
-and `pattern`s are valid regexps but can not be words:
-
-    pattern, openPattern, closePattern := [^a-zA-Z]+
+and `pattern`s are valid regexps but can not be words.
 
