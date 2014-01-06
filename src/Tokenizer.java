@@ -151,6 +151,10 @@ public class Tokenizer {
             errorText.append(openToken.getStart());
             errorText.append(",");
             errorText.append(openToken.getEnd());
+            errorText.append("-@");
+            errorText.append(bestToken.getStart());
+            errorText.append(",");
+            errorText.append(bestToken.getEnd());
             errorText.append(": ");
 
             // text at and before open token
