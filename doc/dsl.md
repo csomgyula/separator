@@ -21,7 +21,7 @@ Simple separators are used to separate a list of elements. It behaves similarly 
 
 **Sample**: 
 
-    s line \n 
+    line \n 
 
 In the above sample the tagname is `line` and the separator is the new line character `\n`. If you apply the above rule then it will extract each line from the original text, each of them will be tagged with the given tagname, ie.:
 
