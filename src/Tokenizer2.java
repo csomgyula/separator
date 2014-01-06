@@ -1,6 +1,7 @@
-package separator.parser;
+package separator;
 
 import separator.Tag2;
+import separator.Token2;
 
 import java.util.ArrayDeque;
 import java.util.Deque;
@@ -157,15 +158,8 @@ public class Tokenizer2 {
         public TagMatcher(Tag2 tag, String text) {
             this.tag = tag;
 
-            Pattern openPattern = tag.getOpen();
-            if (openPattern != null) {
-                open = openPattern.matcher(text);
-            }
-
-            Pattern closePattern = tag.getClose();
-            if (closePattern != null) {
-                close = closePattern.matcher(text);
-            }
+            open = buildMatcher(tag.getOpen(), text);
+            close = buildMatcher(tag.getClose(), text);
 
             if (tag.isA(Tag2.Kind.SIMPLE)) {
                 tokenKind = Token2.Kind.CLOSE;
@@ -176,6 +170,13 @@ public class Tokenizer2 {
             textLength = text.length();
         }
 
+        protected Matcher buildMatcher(Pattern pattern, String text){
+            return pattern != null ? pattern.matcher(text) : null;
+        }
+
+        /**
+         * Returns the tag associated with the matcher.
+         */
         public Tag2 getTag() {
             return tag;
         }

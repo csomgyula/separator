@@ -1,16 +1,11 @@
-package separator.test.parser.tokenizer;
+package separator.test.data;
 
 import separator.Tag2;
 
 /**
  * Simple tokenizer test
  */
-public class RootTest extends AbstractTokenizerTest{
-
-    public static void main(String[] args) {
-        RootTest test = new RootTest();
-        test.test();
-    }
+public class RootTestData extends AbstractTestData {
 
     @Override
     protected void buildParent() {

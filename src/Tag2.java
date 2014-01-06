@@ -46,6 +46,13 @@ public class Tag2 {
     }
 
     public Tag2 getBlockExt() {
+        if (blockExt == null){
+            blockExt = new Tag2();
+            blockExt.setName(getName()+"Ext");
+            blockExt.setIndex(getIndex());
+            blockExt.setParent(getParent());
+            blockExt.setKind(Kind.SIMPLE_BLOCK_EXT);
+        }
         return blockExt;
     }
 

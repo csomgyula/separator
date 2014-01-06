@@ -1,4 +1,4 @@
-package separator.parser;
+package separator;
 
 import separator.Tag2;
 
@@ -57,6 +57,26 @@ public class Token2 {
 
     public boolean isSpecial(){
         return specialKind != SpecialKind.NOT_SPECIAL;
+    }
+
+    public boolean isOpen(){
+        return getKind() == Kind.OPEN;
+    }
+
+    public boolean isClose(){
+        return getKind() == Kind.CLOSE;
+    }
+
+    public boolean isNotSpecial(){
+        return getSpecialKind() == SpecialKind.NOT_SPECIAL;
+    }
+
+    public boolean isSOS(){
+        return getSpecialKind() == SpecialKind.SOS;
+    }
+
+    public boolean isEOS(){
+        return getSpecialKind() == SpecialKind.EOS;
     }
 
     public boolean isA(Kind kind){

@@ -1,4 +1,4 @@
-package separator.test.parser.tokenizer;
+package separator.test.data;
 
 import separator.Tag2;
 
@@ -7,15 +7,10 @@ import java.util.regex.Pattern;
 /**
  * simple block
  */
-public class SimpleBlockTest extends AbstractTokenizerTest {
-    public static void main(String[] args) {
-        SimpleBlockTest test = new SimpleBlockTest();
-        test.test();
-    }
-
+public class SimpleBlockTestData extends AbstractTestData {
     @Override
     protected void buildParent() {
-        setParent(new RootTest());
+        setParent(new RootTestData());
     }
 
     @Override
@@ -28,6 +23,7 @@ public class SimpleBlockTest extends AbstractTokenizerTest {
         tag.setOpen(  Pattern.compile("\\{") );
         tag.setClose( Pattern.compile("\\}") );
 
+        tag.setParent(getTags().get(getTags().size() - 1));
         tag.setIndex(getTags().size());
         getTags().add(tag);
     }

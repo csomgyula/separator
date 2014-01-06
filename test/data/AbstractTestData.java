@@ -1,46 +1,28 @@
-package separator.test.parser.tokenizer;
+package separator.test.data;
 
 import separator.Tag2;
-import separator.parser.Token2;
-import separator.parser.Tokenizer2;
 
 import java.util.ArrayList;
 import java.util.List;
 
 /**
- *
+ *  Test data.
  */
-public abstract class AbstractTokenizerTest {
+public abstract class AbstractTestData {
 
-    private AbstractTokenizerTest parent;
+    private AbstractTestData parent;
     private List<Tag2> tags;
     private List<String> texts;
     private String name;
 
-    public void test() {
-        for (String text : getTexts()) {
-            Tokenizer2 tokenizer = new Tokenizer2(getTags(), text);
-            System.out.println("test: " + getName());
-            System.out.println("text: \"" + text + "\" (len: " + text.length() + ")");
-            System.out.println("tokens: ");
-
-            Token2 token;
-            while ((token = tokenizer.next()) != null) {
-                System.out.println("\t" + token);
-            }
-
-            System.out.println();
-        }
-    }
-
-    public AbstractTokenizerTest getParent() {
+    public AbstractTestData getParent() {
         if (parent == null){
             buildParent();
         }
         return parent;
     }
 
-    public void setParent(AbstractTokenizerTest parent){
+    public void setParent(AbstractTestData parent){
         this.parent = parent;
     }
 
@@ -72,7 +54,7 @@ public abstract class AbstractTokenizerTest {
 
     protected abstract void buildTexts();
 
-    protected String getName(){
+    public String getName(){
          if (name == null){
              String nameBuild;
              String[]  namesBuild;

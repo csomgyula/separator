@@ -1,4 +1,4 @@
-package separator.test.parser.tokenizer;
+package separator.test.data;
 
 import separator.Tag2;
 
@@ -7,15 +7,10 @@ import java.util.regex.Pattern;
 /**
  * nesting simple blocks and simple separators
  */
-public class SimpleBlockNestingTest extends AbstractTokenizerTest{
-    public static void main(String[] args) {
-        SimpleBlockNestingTest test = new SimpleBlockNestingTest();
-        test.test();
-    }
-
+public class SimpleBlockNestingTestData extends AbstractTestData {
     @Override
     protected void buildParent() {
-        setParent(new RootTest());
+        setParent(new RootTestData());
     }
 
     @Override
@@ -27,6 +22,7 @@ public class SimpleBlockNestingTest extends AbstractTokenizerTest{
         tag.setKind(Tag2.Kind.SIMPLE_BLOCK);
         tag.setOpen(  Pattern.compile("\\{") );
         tag.setClose( Pattern.compile("\\}") );
+        tag.setParent(getTags().get(getTags().size() - 1));
         tag.setIndex(getTags().size());
         getTags().add(tag);
 
@@ -34,6 +30,7 @@ public class SimpleBlockNestingTest extends AbstractTokenizerTest{
         tag.setName("expr");
         tag.setKind(Tag2.Kind.SIMPLE);
         tag.setClose(Pattern.compile(";"));
+        tag.setParent(getTags().get(getTags().size() - 1));
         tag.setIndex(getTags().size());
         getTags().add(tag);
 
@@ -42,6 +39,7 @@ public class SimpleBlockNestingTest extends AbstractTokenizerTest{
         tag.setKind(Tag2.Kind.SIMPLE_BLOCK);
         tag.setOpen(  Pattern.compile("\\(") );
         tag.setClose( Pattern.compile("\\)") );
+        tag.setParent(getTags().get(getTags().size() - 1));
         tag.setIndex(getTags().size());
         getTags().add(tag);
     }
