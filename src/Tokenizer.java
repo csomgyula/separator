@@ -45,6 +45,7 @@ public class Tokenizer {
     protected static class TagHierarchyMatcher {
         // -- config
         private TagMatcher[] tagMatchers;
+        private String text;
         private int textLength;
 
         public TagHierarchyMatcher(List<Tag> tags, String text) {
@@ -55,6 +56,8 @@ public class Tokenizer {
                 tagMatchers[index++] = new TagMatcher(tag, text);
             }
             openMatchers = new ArrayDeque<TagMatcher>();
+
+            this.text = text;
             textLength = text.length();
         }
 
@@ -84,9 +87,6 @@ public class Tokenizer {
 
             // init deepest open matcher
             TagMatcher deepestOpenMatcher = getDeepestOpenMatcher();
-            if (deepestOpenMatcher != null) {
-                loopStart = deepestOpenMatcher.getTag().getIndex();
-            }
 
             // loop through tags and select the best match
             TagMatcher matcher;
@@ -105,6 +105,71 @@ public class Tokenizer {
             }
 
             if (bestMatcher != null) {
+                Token bestToken = bestMatcher.getToken();
+
+                // validate that the deepest open block is not harmed
+                if (deepestOpenMatcher != null && deepestOpenMatcher.getTag().getIndex() > bestToken.getTag().getIndex()) {
+                    StringBuilder errorText = new StringBuilder();
+                    Token openToken = deepestOpenMatcher.getOpenToken();
+
+                    // main text
+                    errorText.append("Missing enclosing separator");
+
+                    // source
+                    errorText.append(" @");
+                    errorText.append(openToken.getStart());
+                    errorText.append(",");
+                    errorText.append(openToken.getEnd());
+                    errorText.append(": ");
+
+                    // text at and before open token
+                    int errStart, errEnd;
+                    errStart = openToken.getStart()-10;
+                    errEnd = openToken.getStart();
+                    if (errStart < 0){
+                        errStart = 0;
+                    }
+                    if (errStart < errEnd){
+                        if (errStart>0) { errorText.append("..."); }
+                        errorText.append(text.substring(errStart, errEnd).replaceAll("\n", "\\\\n"));
+                    }
+                    errorText.append("^^^");
+                    errStart = openToken.getStart();
+                    errEnd = openToken.getEnd();
+                    errorText.append(text.substring(errStart, errEnd).replaceAll("\n", "\\\\n"));
+
+                    // text between open and best token
+                    errStart = bestToken.getStart() - 10;
+                    errEnd = openToken.getEnd() + 10;
+                    if (errEnd < errStart){
+                        errStart = openToken.getEnd();
+                        errorText.append(text.substring(errStart, errEnd).replaceAll("\n", "\\\\n"));
+                        errorText.append("...");
+                        errStart = bestToken.getStart() - 10;
+                        errEnd = bestToken.getStart();
+                        errorText.append(text.substring(errStart, errEnd).replaceAll("\n", "\\\\n"));
+                    }
+                    else{
+                        errStart = openToken.getEnd();
+                        errEnd = bestToken.getStart();
+                        errorText.append(text.substring(errStart, errEnd).replaceAll("\n", "\\\\n"));
+                    }
+
+                    // text at and after best token
+                    errorText.append("^^^");
+                    errStart = bestToken.getStart();
+                    errEnd = bestToken.getEnd()+10;
+                    if (errEnd>textLength){
+                        errEnd = textLength;
+                    }
+                    if (errStart < errEnd){
+                        errorText.append(text.substring(errStart, errEnd).replaceAll("\n", "\\\\n"));
+                        if (errEnd<textLength) { errorText.append("..."); }
+                    }
+
+                    throw new RuntimeException(errorText.toString());
+                }
+
 
                 // notify the matcher - this must be invoked before close / openMatcher
                 bestMatcher.matched();
@@ -117,7 +182,7 @@ public class Tokenizer {
                 }
 
                 // set best match
-                token = bestMatcher.getToken();
+                token = bestToken;
             }
 
             // return true if there was a match otherwise false.
@@ -167,7 +232,7 @@ public class Tokenizer {
             textLength = text.length();
         }
 
-        protected Matcher buildMatcher(Pattern pattern, String text){
+        protected Matcher buildMatcher(Pattern pattern, String text) {
             return pattern != null ? pattern.matcher(text) : null;
         }
 
@@ -180,7 +245,7 @@ public class Tokenizer {
 
         // -- state
         private Token.Kind tokenKind;
-        private Token token;
+        private Token token, openToken;
 
         /**
          * Returns the matcher associated with the current kind.
@@ -198,6 +263,13 @@ public class Tokenizer {
             return matcher;
         }
 
+        /**
+         * Returns the match associate with the last open token if any.
+         */
+        public Token getOpenToken() {
+            return openToken;
+        }
+
         // -- inputs
 
         /**
@@ -206,6 +278,7 @@ public class Tokenizer {
          */
         public boolean find(int pos) {
             Matcher matcher = getMatcher();
+            Token token = null;
             // normal text pos
             if (0 <= pos && pos < textLength) {
                 if (matcher != null && matcher.find(pos)) {
@@ -214,7 +287,6 @@ public class Tokenizer {
                     token.setKind(tokenKind); // no need to set special kind since it defaults to not special
                     token.setStart(matcher.start());
                     token.setEnd(matcher.end());
-                    return true;
                 } else if (getTag().isRoot()) {   // FIXME: avoid DRY
                     token = new Token();
                     token.setTag(tag);
@@ -222,10 +294,6 @@ public class Tokenizer {
                     token.setSpecialKind(Token.SpecialKind.EOS);
                     token.setStart(textLength);
                     token.setEnd(textLength + 1);
-                    return true;
-                } else {
-                    token = null;
-                    return false;
                 }
             }
             // special text pos (SOS, EOS)
@@ -236,9 +304,15 @@ public class Tokenizer {
                 token.setSpecialKind(pos == -1 ? Token.SpecialKind.SOS : Token.SpecialKind.EOS);
                 token.setStart(pos);
                 token.setEnd(pos + 1);
+            }
+
+            if (token != null) {
+                this.token = token;
+                if (tokenKind == Token.Kind.OPEN){
+                    openToken = token;
+                }
                 return true;
             } else {
-                token = null;
                 return false;
             }
         }
